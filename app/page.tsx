@@ -349,7 +349,7 @@ function InvoiceBuilder({ onSave }: { onSave: (inv: Invoice) => void }) {
   }, [invoice]);
 
   const printRef = useRef<HTMLDivElement>(null);
-  const handlePrint = useReactToPrint({ content: () => printRef.current });
+  const handlePrint = useReactToPrint({ contentRef: printRef });
 
   const addItem = () => setInvoice((s) => ({ ...s, items: [...s.items, { ...emptyItem }] }));
   const removeItem = (i: number) => setInvoice((s) => ({ ...s, items: s.items.filter((_, k) => k !== i) }));
