@@ -27,3 +27,4 @@ A simple, online invoice web app. Create invoices, preview them, export to PDF, 
 ```bash
 npm install
 npm run dev
+Open http://localhost:3000
