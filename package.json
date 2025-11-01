@@ -4,21 +4,19 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
+    "build": "echo '🚧 Running Next.js build...' && next build",
+    "start": "echo '🚀 Starting production server...' && next start",
     "lint": "next lint"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.44.1",
+    "@supabase/supabase-js": "^2.45.0",
     "autoprefixer": "^10.4.17",
-    "framer-motion": "^11.0.0",
     "lucide-react": "^0.390.0",
-    "next": "^14.0.1",
+    "next": "^14.2.33",
     "postcss": "^8.4.31",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-to-print": "^3.1.1",
-    "recharts": "^2.10.3",
     "tailwindcss": "^3.4.3"
   },
   "devDependencies": {
@@ -28,6 +26,5 @@
     "@types/node": "^20.11.30",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0"
-}
-
   }
+}
