@@ -7,35 +7,60 @@ body {
   @apply bg-neutral-50 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-50;
 }
 
+/* Buttons */
 .btn {
-  @apply inline-flex items-center justify-center rounded-lg border border-neutral-300 bg-white dark:bg-neutral-900 px-4 py-2 text-sm font-medium transition hover:bg-neutral-100 dark:hover:bg-neutral-800;
+  @apply inline-flex items-center justify-center rounded-lg border px-4 py-2 text-sm font-medium transition
+         border-neutral-300 bg-white text-neutral-900 hover:bg-neutral-100
+         dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:hover:bg-neutral-700;
+}
+.btn-primary {
+  @apply border-transparent bg-black text-white hover:opacity-90
+         dark:bg-white dark:text-black dark:hover:opacity-90;
+}
+.btn-danger {
+  @apply border-transparent bg-red-600 text-white hover:bg-red-700
+         dark:bg-red-500 dark:hover:bg-red-600;
+}
+/* High-contrast ghost button for dark mode */
+.btn-ghost-strong {
+  @apply border-transparent bg-transparent text-neutral-800 hover:bg-neutral-100
+         dark:text-neutral-100 dark:hover:bg-neutral-800 dark:border-neutral-700;
 }
 
 .btn-sm {
-  @apply inline-flex items-center justify-center rounded-lg border border-neutral-300 bg-white px-2 py-1 text-sm hover:bg-neutral-100;
+  @apply inline-flex items-center justify-center rounded-lg border px-2 py-1 text-sm transition
+         border-neutral-300 bg-white text-neutral-900 hover:bg-neutral-100
+         dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:hover:bg-neutral-700;
 }
 
+/* Inputs */
 .input {
-  @apply w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900;
+  @apply w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm
+         dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100;
 }
-
 .textarea {
-  @apply w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm resize-y dark:border-neutral-700 dark:bg-neutral-900;
+  @apply w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm resize-y
+         dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100;
 }
-
 .label {
   @apply block text-sm font-medium mb-1 text-neutral-700 dark:text-neutral-200;
 }
 
+/* Cards */
 .card {
-  @apply rounded-2xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900;
+  @apply rounded-2xl border border-neutral-200 bg-white shadow-sm
+         dark:border-neutral-800 dark:bg-neutral-900;
 }
-.card-h {
-  @apply px-4 py-3 border-b border-neutral-200 dark:border-neutral-800;
+.card-h { @apply px-4 py-3 border-b border-neutral-200 dark:border-neutral-800; }
+.card-t { @apply text-lg font-semibold; }
+.card-c { @apply p-4; }
+
+/* Tabs */
+.tab-btn {
+  @apply px-4 py-2 bg-white text-neutral-900 hover:bg-neutral-100
+         dark:bg-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800;
 }
-.card-t {
-  @apply text-lg font-semibold;
-}
-.card-c {
-  @apply p-4;
+.tab-btn-active {
+  @apply bg-black text-white
+         dark:bg-white dark:text-black;
 }
