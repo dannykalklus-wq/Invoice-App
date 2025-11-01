@@ -13,34 +13,45 @@ const supabase = (supabaseUrl && supabaseAnonKey) ? createClient(supabaseUrl, su
 // ---------- Minimal UI helpers (Tailwind) ----------
 const cls = (...xs: Array<string | false | null | undefined>) => xs.filter(Boolean).join(" ");
 
-const Button = (props: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "solid" | "outline" | "ghost", size?: "sm" | "md" }) => {
-  const { className, variant = "solid", size = "md", ...rest } = props;
+type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
+  variant?: "solid" | "outline" | "ghost";
+  size?: "sm" | "md";
+};
+const Button: React.FC<ButtonProps> = ({ className, variant = "solid", size = "md", children, ...rest }) => {
   const base = "inline-flex items-center justify-center rounded-xl transition border";
   const sizes = size === "sm" ? "px-3 py-1.5 text-sm" : "px-4 py-2";
-  const variants = {
-    solid: "bg-black text-white border-transparent hover:opacity-90 dark:bg-white dark:text-black",
-    outline: "bg-transparent text-black border-neutral-300 hover:bg-neutral-100 dark:text-white dark:border-neutral-700 dark:hover:bg-neutral-800",
-    ghost: "bg-transparent text-black border-transparent hover:bg-neutral-100 dark:text-white dark:hover:bg-neutral-800",
-  }[variant];
-  return <button className={cls(base, sizes, variants, className)} {...rest} />;
+  const variants =
+    variant === "solid"
+      ? "bg-black text-white border-transparent hover:opacity-90 dark:bg-white dark:text-black"
+      : variant === "outline"
+      ? "bg-transparent text-black border-neutral-300 hover:bg-neutral-100 dark:text-white dark:border-neutral-700 dark:hover:bg-neutral-800"
+      : "bg-transparent text-black border-transparent hover:bg-neutral-100 dark:text-white dark:hover:bg-neutral-800";
+  return (
+    <button className={cls(base, sizes, variants, className)} {...rest}>
+      {children}
+    </button>
+  );
 };
 
-const Input = (props: React.InputHTMLAttributes<HTMLInputElement>) => (
+const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement>> = ({ className, ...rest }) => (
   <input
     className={cls(
       "w-full rounded-xl border px-3 py-2",
       "border-neutral-300 bg-white text-black",
-      "dark:border-neutral-700 dark:bg-neutral-900 dark:text-white"
+      "dark:border-neutral-700 dark:bg-neutral-900 dark:text-white",
+      className
     )}
-    {...props}
+    {...rest}
   />
 );
 
-const Label = (props: React.LabelHTMLAttributes<HTMLLabelElement>) => (
-  <label className="block text-sm font-medium mb-1 text-neutral-700 dark:text-neutral-200" {...props} />
+const Label: React.FC<React.LabelHTMLAttributes<HTMLLabelElement>> = ({ className, children, ...rest }) => (
+  <label className={cls("block text-sm font-medium mb-1 text-neutral-700 dark:text-neutral-200", className)} {...rest}>
+    {children}
+  </label>
 );
 
-const Card: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({ className, ...rest }) => (
+const Card: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({ className, children, ...rest }) => (
   <div
     className={cls(
       "rounded-2xl border",
@@ -49,19 +60,25 @@ const Card: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({ className, ...re
       className
     )}
     {...rest}
-  />
+  >
+    {children}
+  </div>
 );
 
-const CardHeader: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({ className, ...rest }) => (
-  <div className={cls("px-4 py-3 border-b border-neutral-200 dark:border-neutral-800", className)} {...rest} />
+const CardHeader: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({ className, children, ...rest }) => (
+  <div className={cls("px-4 py-3 border-b border-neutral-200 dark:border-neutral-800", className)} {...rest}>
+    {children}
+  </div>
 );
 
-const CardTitle: React.FC = ({ children }) => (
+const CardTitle = ({ children }: { children?: React.ReactNode }) => (
   <div className="text-lg font-semibold">{children}</div>
 );
 
-const CardContent: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({ className, ...rest }) => (
-  <div className={cls("p-4", className)} {...rest} />
+const CardContent: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({ className, children, ...rest }) => (
+  <div className={cls("p-4", className)} {...rest}>
+    {children}
+  </div>
 );
 
 // ---------- Theme ----------
@@ -110,7 +127,7 @@ const emptyInvoice: Invoice = {
   clientName: "",
   clientAddress: "",
   clientEmail: "",
-  items: [ { ...emptyItem } ],
+  items: [{ ...emptyItem }],
   notes: "",
   paymentStatus: "Unpaid",
   paymentDate: "",
@@ -127,19 +144,32 @@ const emptyInvoice: Invoice = {
 // ---------- Database hook (Supabase if available, otherwise localStorage) ----------
 const useDB = () => {
   const [rows, setRows] = useState<any[]>(() => {
-    try { return JSON.parse(localStorage.getItem("__invoice_db") || "[]"); } catch { return []; }
+    try {
+      return JSON.parse(localStorage.getItem("__invoice_db") || "[]");
+    } catch {
+      return [];
+    }
   });
-  useEffect(() => { try { localStorage.setItem("__invoice_db", JSON.stringify(rows)); } catch {} }, [rows]);
+  useEffect(() => {
+    try {
+      localStorage.setItem("__invoice_db", JSON.stringify(rows));
+    } catch {}
+  }, [rows]);
 
   const loadRemote = async () => {
     if (!supabase) return;
     const { data, error } = await supabase
       .from("invoices")
-      .select("invoiceNo, invoiceDate, dueDate, clientName, amount, paymentStatus, paymentDate, driveLink, notes")
+      .select(
+        "invoiceNo, invoiceDate, dueDate, clientName, amount, paymentStatus, paymentDate, driveLink, notes"
+      )
       .order("invoiceDate", { ascending: false });
     if (!error && data) setRows(data);
   };
-  useEffect(() => { loadRemote(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
+  useEffect(() => {
+    loadRemote();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const add = async (inv: Invoice) => {
     const sub = inv.items.reduce((s, x) => s + Number(x.qty || 0) * Number(x.rate || 0), 0);
@@ -177,7 +207,14 @@ const useDB = () => {
 // ---------- Invoice Printable ----------
 const Money: React.FC<{ children: any }> = ({ children }) => {
   const val = Number(children || 0);
-  return <span>{val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>;
+  return (
+    <span>
+      {val.toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}
+    </span>
+  );
 };
 
 const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(({ invoice }, ref) => {
@@ -205,7 +242,9 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(({ i
         </div>
         <div className="text-right">
           <div className="text-3xl font-bold tracking-tight">INVOICE</div>
-          <div className="mt-2 text-sm">Invoice No: <span className="font-medium">{invoice.invoiceNo}</span></div>
+          <div className="mt-2 text-sm">
+            Invoice No: <span className="font-medium">{invoice.invoiceNo}</span>
+          </div>
           <div className="text-sm">Invoice Date: {invoice.invoiceDate}</div>
           <div className="text-sm">Due Date: {invoice.dueDate}</div>
         </div>
@@ -220,7 +259,9 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(({ i
           <div className="text-sm">{invoice.clientEmail}</div>
         </div>
         <div className="text-right">
-          <div className="text-sm">Payment Status: <span className="font-medium">{invoice.paymentStatus}</span></div>
+          <div className="text-sm">
+            Payment Status: <span className="font-medium">{invoice.paymentStatus}</span>
+          </div>
           {invoice.paymentDate && <div className="text-sm">Payment Date: {invoice.paymentDate}</div>}
           {invoice.driveLink && <div className="text-sm truncate">Link: {invoice.driveLink}</div>}
         </div>
@@ -237,13 +278,17 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(({ i
               <th className="px-3 py-2 text-right">Amount</th>
             </tr>
           </thead>
-          <tbody>
+        <tbody>
             {invoice.items.map((it, i) => (
               <tr className="border-t" key={i}>
                 <td className="px-3 py-2">{it.description}</td>
                 <td className="px-3 py-2 text-right">{it.qty}</td>
-                <td className="px-3 py-2 text-right"><Money>{it.rate}</Money></td>
-                <td className="px-3 py-2 text-right"><Money>{Number(it.qty || 0) * Number(it.rate || 0)}</Money></td>
+                <td className="px-3 py-2 text-right">
+                  <Money>{it.rate}</Money>
+                </td>
+                <td className="px-3 py-2 text-right">
+                  <Money>{Number(it.qty || 0) * Number(it.rate || 0)}</Money>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -257,10 +302,30 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(({ i
           <div className="whitespace-pre-wrap mt-1 min-h-[3rem]">{invoice.notes}</div>
         </div>
         <div className="justify-self-end w-64">
-          <div className="flex justify-between text-sm py-1"><div>Subtotal</div><div><Money>{subTotal}</Money></div></div>
-          <div className="flex justify-between text-sm py-1"><div>Tax ({invoice.taxRate || 0}%)</div><div><Money>{tax}</Money></div></div>
-          <div className="flex justify-between text-sm py-1"><div>Discount</div><div><Money>{invoice.discount || 0}</Money></div></div>
-          <div className="border-t mt-2 pt-2 flex justify-between font-semibold"><div>Total</div><div><Money>{subTotal + tax - Number(invoice.discount || 0)}</Money></div></div>
+          <div className="flex justify-between text-sm py-1">
+            <div>Subtotal</div>
+            <div>
+              <Money>{subTotal}</Money>
+            </div>
+          </div>
+          <div className="flex justify-between text-sm py-1">
+            <div>Tax ({invoice.taxRate || 0}%)</div>
+            <div>
+              <Money>{tax}</Money>
+            </div>
+          </div>
+          <div className="flex justify-between text-sm py-1">
+            <div>Discount</div>
+            <div>
+              <Money>{invoice.discount || 0}</Money>
+            </div>
+          </div>
+          <div className="border-t mt-2 pt-2 flex justify-between font-semibold">
+            <div>Total</div>
+            <div>
+              <Money>{subTotal + tax - Number(invoice.discount || 0)}</Money>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -271,16 +336,23 @@ PrintInvoice.displayName = "PrintInvoice";
 // ---------- Invoice Builder ----------
 function InvoiceBuilder({ onSave }: { onSave: (inv: Invoice) => void }) {
   const [invoice, setInvoice] = useState<Invoice>(() => {
-    try { return { ...emptyInvoice, ...(JSON.parse(localStorage.getItem("__draft_invoice") || "null") || {}) }; }
-    catch { return emptyInvoice; }
+    try {
+      return { ...emptyInvoice, ...(JSON.parse(localStorage.getItem("__draft_invoice") || "null") || {}) };
+    } catch {
+      return emptyInvoice;
+    }
   });
-  useEffect(() => { try { localStorage.setItem("__draft_invoice", JSON.stringify(invoice)); } catch {} }, [invoice]);
+  useEffect(() => {
+    try {
+      localStorage.setItem("__draft_invoice", JSON.stringify(invoice));
+    } catch {}
+  }, [invoice]);
 
   const printRef = useRef<HTMLDivElement>(null);
   const handlePrint = useReactToPrint({ content: () => printRef.current });
 
-  const addItem = () => setInvoice(s => ({ ...s, items: [...s.items, { ...emptyItem }] }));
-  const removeItem = (i: number) => setInvoice(s => ({ ...s, items: s.items.filter((_, k) => k !== i) }));
+  const addItem = () => setInvoice((s) => ({ ...s, items: [...s.items, { ...emptyItem }] }));
+  const removeItem = (i: number) => setInvoice((s) => ({ ...s, items: s.items.filter((_, k) => k !== i) }));
 
   const subTotal = invoice.items.reduce((s, x) => s + Number(x.qty || 0) * Number(x.rate || 0), 0);
   const tax = subTotal * (Number(invoice.taxRate || 0) / 100);
@@ -289,44 +361,92 @@ function InvoiceBuilder({ onSave }: { onSave: (inv: Invoice) => void }) {
   return (
     <div className="grid gap-6 lg:grid-cols-3">
       <Card className="lg:col-span-2">
-        <CardHeader><CardTitle>Invoice Form</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle>Invoice Form</CardTitle>
+        </CardHeader>
         <CardContent className="space-y-4">
           {/* Company & Logo */}
           <div className="grid md:grid-cols-2 gap-3">
             <div>
               <Label htmlFor="logo">Logo URL</Label>
-              <Input id="logo" placeholder="https://..." value={invoice.logoUrl || ""} onChange={(e) => setInvoice({ ...invoice, logoUrl: e.target.value })} />
+              <Input
+                id="logo"
+                placeholder="https://..."
+                value={invoice.logoUrl || ""}
+                onChange={(e) => setInvoice({ ...invoice, logoUrl: e.target.value })}
+              />
             </div>
             <div>
               <Label htmlFor="cname">Company Name</Label>
-              <Input id="cname" value={invoice.companyName || ""} onChange={(e) => setInvoice({ ...invoice, companyName: e.target.value })} />
+              <Input
+                id="cname"
+                value={invoice.companyName || ""}
+                onChange={(e) => setInvoice({ ...invoice, companyName: e.target.value })}
+              />
             </div>
             <div>
               <Label htmlFor="cemail">Company Email</Label>
-              <Input id="cemail" value={invoice.companyEmail || ""} onChange={(e) => setInvoice({ ...invoice, companyEmail: e.target.value })} />
+              <Input
+                id="cemail"
+                value={invoice.companyEmail || ""}
+                onChange={(e) => setInvoice({ ...invoice, companyEmail: e.target.value })}
+              />
             </div>
             <div>
               <Label htmlFor="cphone">Company Phone</Label>
-              <Input id="cphone" value={invoice.companyPhone || ""} onChange={(e) => setInvoice({ ...invoice, companyPhone: e.target.value })} />
+              <Input
+                id="cphone"
+                value={invoice.companyPhone || ""}
+                onChange={(e) => setInvoice({ ...invoice, companyPhone: e.target.value })}
+              />
             </div>
             <div className="md:col-span-2">
               <Label htmlFor="caddr">Company Address</Label>
-              <Input id="caddr" value={invoice.companyAddress || ""} onChange={(e) => setInvoice({ ...invoice, companyAddress: e.target.value })} />
+              <Input
+                id="caddr"
+                value={invoice.companyAddress || ""}
+                onChange={(e) => setInvoice({ ...invoice, companyAddress: e.target.value })}
+              />
             </div>
           </div>
 
           {/* Invoice meta */}
           <div className="grid md:grid-cols-3 gap-3">
-            <div><Label>Invoice No</Label><Input value={invoice.invoiceNo} onChange={e => setInvoice({ ...invoice, invoiceNo: e.target.value })} /></div>
-            <div><Label>Invoice Date</Label><Input type="date" value={invoice.invoiceDate} onChange={e => setInvoice({ ...invoice, invoiceDate: e.target.value })} /></div>
-            <div><Label>Due Date</Label><Input type="date" value={invoice.dueDate} onChange={e => setInvoice({ ...invoice, dueDate: e.target.value })} /></div>
+            <div>
+              <Label>Invoice No</Label>
+              <Input value={invoice.invoiceNo} onChange={(e) => setInvoice({ ...invoice, invoiceNo: e.target.value })} />
+            </div>
+            <div>
+              <Label>Invoice Date</Label>
+              <Input
+                type="date"
+                value={invoice.invoiceDate}
+                onChange={(e) => setInvoice({ ...invoice, invoiceDate: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label>Due Date</Label>
+              <Input type="date" value={invoice.dueDate} onChange={(e) => setInvoice({ ...invoice, dueDate: e.target.value })} />
+            </div>
           </div>
 
           {/* Client */}
           <div className="grid md:grid-cols-2 gap-3">
-            <div><Label>Client Name</Label><Input value={invoice.clientName} onChange={e => setInvoice({ ...invoice, clientName: e.target.value })} /></div>
-            <div><Label>Client Email</Label><Input value={invoice.clientEmail} onChange={e => setInvoice({ ...invoice, clientEmail: e.target.value })} /></div>
-            <div className="md:col-span-2"><Label>Client Address</Label><Input value={invoice.clientAddress} onChange={e => setInvoice({ ...invoice, clientAddress: e.target.value })} /></div>
+            <div>
+              <Label>Client Name</Label>
+              <Input value={invoice.clientName} onChange={(e) => setInvoice({ ...invoice, clientName: e.target.value })} />
+            </div>
+            <div>
+              <Label>Client Email</Label>
+              <Input value={invoice.clientEmail} onChange={(e) => setInvoice({ ...invoice, clientEmail: e.target.value })} />
+            </div>
+            <div className="md:col-span-2">
+              <Label>Client Address</Label>
+              <Input
+                value={invoice.clientAddress}
+                onChange={(e) => setInvoice({ ...invoice, clientAddress: e.target.value })}
+              />
+            </div>
           </div>
 
           {/* Items */}
@@ -345,19 +465,39 @@ function InvoiceBuilder({ onSave }: { onSave: (inv: Invoice) => void }) {
                 {invoice.items.map((it, i) => (
                   <tr key={i} className="border-t">
                     <td className="px-3 py-2">
-                      <Input placeholder="Item / Service description" value={it.description} onChange={(e) => {
-                        const items = [...invoice.items]; items[i].description = e.target.value; setInvoice({ ...invoice, items });
-                      }} />
+                      <Input
+                        placeholder="Item / Service description"
+                        value={it.description}
+                        onChange={(e) => {
+                          const items = [...invoice.items];
+                          items[i].description = e.target.value;
+                          setInvoice({ ...invoice, items });
+                        }}
+                      />
                     </td>
                     <td className="px-3 py-2">
-                      <Input type="number" min={0} value={it.qty} onChange={(e) => {
-                        const items = [...invoice.items]; items[i].qty = Number(e.target.value); setInvoice({ ...invoice, items });
-                      }} />
+                      <Input
+                        type="number"
+                        min={0}
+                        value={it.qty}
+                        onChange={(e) => {
+                          const items = [...invoice.items];
+                          items[i].qty = Number(e.target.value);
+                          setInvoice({ ...invoice, items });
+                        }}
+                      />
                     </td>
                     <td className="px-3 py-2">
-                      <Input type="number" step="0.01" value={it.rate} onChange={(e) => {
-                        const items = [...invoice.items]; items[i].rate = Number(e.target.value); setInvoice({ ...invoice, items });
-                      }} />
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={it.rate}
+                        onChange={(e) => {
+                          const items = [...invoice.items];
+                          items[i].rate = Number(e.target.value);
+                          setInvoice({ ...invoice, items });
+                        }}
+                      />
                     </td>
                     <td className="px-3 py-2 text-right align-middle">
                       <Money>{Number(it.qty || 0) * Number(it.rate || 0)}</Money>
@@ -375,30 +515,62 @@ function InvoiceBuilder({ onSave }: { onSave: (inv: Invoice) => void }) {
 
           {/* Summary */}
           <div className="flex justify-between mt-2">
-            <Button variant="outline" onClick={addItem}><Plus className="mr-2 h-4 w-4" /> Add line</Button>
+            <Button variant="outline" onClick={addItem}>
+              <Plus className="mr-2 h-4 w-4" /> Add line
+            </Button>
             <div className="w-80">
-              <div className="flex justify-between text-sm py-1"><div>Subtotal</div><div><Money>{subTotal}</Money></div></div>
+              <div className="flex justify-between text-sm py-1">
+                <div>Subtotal</div>
+                <div>
+                  <Money>{subTotal}</Money>
+                </div>
+              </div>
               <div className="flex items-center justify-between text-sm py-1 gap-2">
                 <div className="flex items-center gap-2">
                   <Label className="text-sm">Tax %</Label>
-                  <Input className="w-20" type="number" step="0.01" value={invoice.taxRate} onChange={(e) => setInvoice({ ...invoice, taxRate: Number(e.target.value) })} />
+                  <Input
+                    className="w-20"
+                    type="number"
+                    step="0.01"
+                    value={invoice.taxRate}
+                    onChange={(e) => setInvoice({ ...invoice, taxRate: Number(e.target.value) })}
+                  />
                 </div>
-                <div><Money>{tax}</Money></div>
+                <div>
+                  <Money>{tax}</Money>
+                </div>
               </div>
               <div className="flex items-center justify-between text-sm py-1 gap-2">
                 <div className="flex items-center gap-2">
                   <Label className="text-sm">Discount</Label>
-                  <Input className="w-24" type="number" step="0.01" value={invoice.discount} onChange={(e) => setInvoice({ ...invoice, discount: Number(e.target.value) })} />
+                  <Input
+                    className="w-24"
+                    type="number"
+                    step="0.01"
+                    value={invoice.discount}
+                    onChange={(e) => setInvoice({ ...invoice, discount: Number(e.target.value) })}
+                  />
                 </div>
-                <div><Money>{invoice.discount || 0}</Money></div>
+                <div>
+                  <Money>{invoice.discount || 0}</Money>
+                </div>
               </div>
-              <div className="border-t mt-2 pt-2 flex justify-between font-semibold"><div>Total</div><div><Money>{total}</Money></div></div>
+              <div className="border-t mt-2 pt-2 flex justify-between font-semibold">
+                <div>Total</div>
+                <div>
+                  <Money>{total}</Money>
+                </div>
+              </div>
             </div>
           </div>
 
           <div>
             <Label>Notes</Label>
-            <Input value={invoice.notes} onChange={(e) => setInvoice({ ...invoice, notes: e.target.value })} placeholder="Payment instructions, bank details, etc." />
+            <Input
+              value={invoice.notes}
+              onChange={(e) => setInvoice({ ...invoice, notes: e.target.value })}
+              placeholder="Payment instructions, bank details, etc."
+            />
           </div>
 
           {/* Payment / Drive link */}
@@ -417,24 +589,38 @@ function InvoiceBuilder({ onSave }: { onSave: (inv: Invoice) => void }) {
             </div>
             <div>
               <Label>Payment Date</Label>
-              <Input type="date" value={invoice.paymentDate || ""} onChange={(e) => setInvoice({ ...invoice, paymentDate: e.target.value })} />
+              <Input
+                type="date"
+                value={invoice.paymentDate || ""}
+                onChange={(e) => setInvoice({ ...invoice, paymentDate: e.target.value })}
+              />
             </div>
             <div>
               <Label>Google Drive Link</Label>
-              <Input placeholder="https://drive.google.com/..." value={invoice.driveLink || ""} onChange={(e) => setInvoice({ ...invoice, driveLink: e.target.value })} />
+              <Input
+                placeholder="https://drive.google.com/..."
+                value={invoice.driveLink || ""}
+                onChange={(e) => setInvoice({ ...invoice, driveLink: e.target.value })}
+              />
             </div>
           </div>
 
           <div className="flex flex-wrap gap-2 pt-2">
-            <Button onClick={() => onSave(invoice)}><Save className="mr-2 h-4 w-4" /> Save to Database</Button>
-            <Button variant="outline" onClick={handlePrint}><Printer className="mr-2 h-4 w-4" /> Export to PDF</Button>
+            <Button onClick={() => onSave(invoice)}>
+              <Save className="mr-2 h-4 w-4" /> Save to Database
+            </Button>
+            <Button variant="outline" onClick={handlePrint}>
+              <Printer className="mr-2 h-4 w-4" /> Export to PDF
+            </Button>
           </div>
         </CardContent>
       </Card>
 
       {/* Live PDF Preview */}
       <Card>
-        <CardHeader><CardTitle>Preview (PDF output)</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle>Preview (PDF output)</CardTitle>
+        </CardHeader>
         <CardContent>
           <div className="border rounded-xl overflow-hidden bg-white text-black">
             <div className="print-area">
@@ -449,21 +635,30 @@ function InvoiceBuilder({ onSave }: { onSave: (inv: Invoice) => void }) {
 }
 
 // ---------- Invoices List ----------
-function Invoices({ rows, onDelete }: { rows: any[]; onDelete: (id: string) => void }) {
+function Invoices({ rows }: { rows: any[] }) {
   const [query, setQuery] = useState("");
   const filtered = useMemo(() => {
     const q = query.toLowerCase();
-    return rows.filter(r => !q || r.invoiceNo.toLowerCase().includes(q) || r.clientName.toLowerCase().includes(q));
+    return rows.filter(
+      (r) => !q || r.invoiceNo.toLowerCase().includes(q) || r.clientName.toLowerCase().includes(q)
+    );
   }, [rows, query]);
 
   return (
     <Card>
-      <CardHeader><CardTitle>Invoices</CardTitle></CardHeader>
+      <CardHeader>
+        <CardTitle>Invoices</CardTitle>
+      </CardHeader>
       <CardContent>
         <div className="flex justify-end mb-3">
           <div className="relative w-60">
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 opacity-60" />
-            <Input className="pl-8" placeholder="Search by number or client" value={query} onChange={(e) => setQuery(e.target.value)} />
+            <Input
+              className="pl-8"
+              placeholder="Search by number or client"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
           </div>
         </div>
         <div className="overflow-hidden rounded-xl border">
@@ -488,7 +683,9 @@ function Invoices({ rows, onDelete }: { rows: any[]; onDelete: (id: string) => v
                   <td className="px-3 py-2">{r.invoiceDate}</td>
                   <td className="px-3 py-2">{r.dueDate}</td>
                   <td className="px-3 py-2">{r.clientName}</td>
-                  <td className="px-3 py-2 text-right"><Money>{r.amount}</Money></td>
+                  <td className="px-3 py-2 text-right">
+                    <Money>{r.amount}</Money>
+                  </td>
                   <td className="px-3 py-2">{r.paymentStatus}</td>
                   <td className="px-3 py-2">{r.paymentDate || ""}</td>
                   <td className="px-3 py-2 truncate max-w-[10rem]">{r.driveLink || ""}</td>
@@ -496,7 +693,11 @@ function Invoices({ rows, onDelete }: { rows: any[]; onDelete: (id: string) => v
                 </tr>
               ))}
               {filtered.length === 0 && (
-                <tr><td colSpan={9} className="px-3 py-10 text-center text-neutral-500">No invoices yet.</td></tr>
+                <tr>
+                  <td colSpan={9} className="px-3 py-10 text-center text-neutral-500">
+                    No invoices yet.
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
@@ -518,7 +719,7 @@ export default function App() {
       <div className="flex justify-between items-center border-b px-4 py-3 bg-white dark:bg-neutral-900">
         <div className="text-lg font-semibold">Invoice System</div>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="md" onClick={() => setDark(!dark)}>
+          <Button variant="ghost" onClick={() => setDark(!dark)}>
             {dark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
           </Button>
         </div>
@@ -529,20 +730,26 @@ export default function App() {
         <div className="mb-4 inline-flex rounded-xl border overflow-hidden">
           <button
             onClick={() => setActive("create")}
-            className={cls("px-4 py-2", active === "create" ? "bg-black text-white dark:bg-white dark:text-black" : "bg-transparent")}
+            className={cls(
+              "px-4 py-2",
+              active === "create" ? "bg-black text-white dark:bg-white dark:text-black" : "bg-transparent"
+            )}
           >
             Create Invoice
           </button>
           <button
             onClick={() => setActive("invoices")}
-            className={cls("px-4 py-2 border-l", active === "invoices" ? "bg-black text-white dark:bg-white dark:text-black" : "bg-transparent")}
+            className={cls(
+              "px-4 py-2 border-l",
+              active === "invoices" ? "bg-black text-white dark:bg-white dark:text-black" : "bg-transparent"
+            )}
           >
             Invoices
           </button>
         </div>
 
         {active === "create" && <InvoiceBuilder onSave={db.add} />}
-        {active === "invoices" && <Invoices rows={db.rows} onDelete={() => {}} />}
+        {active === "invoices" && <Invoices rows={db.rows} />}
       </div>
     </div>
   );
