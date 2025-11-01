@@ -1,20 +1,17 @@
-# Invoice System (Next.js + Tailwind + Supabase-ready)
+# 🧾 Lexvor Invoice System (Next.js + TailwindCSS)
 
-A simple, online invoice web app. Create invoices, preview them, export to PDF, and (optionally) sync to a cloud database with Supabase.
+### Overview
+A browser-based invoice management system built using **Next.js 14**, **TailwindCSS**, and **React-to-Print**.
 
-## Features
-- Create invoices with items (qty × rate)
-- Live preview and **Export to PDF** (via browser print)
-- Light/Dark mode
-- Invoices table (summary)
-- Optional Supabase cloud database (auto-detected via env keys)
+### Features
+- Create, edit, and print invoices
+- Export/import invoices from browser storage
+- Auto-calculations for tax, discounts, and shipping
+- Safe localStorage access with client-only rendering
 
-## Tech Stack
-- Next.js 14 (App Router)
-- React 18
-- Tailwind CSS
-- lucide-react icons
-- framer-motion
-- react-to-print (PDF export)
-- recharts (ready for charts if needed)
-- Supabase (optional)
+### Debugging
+Key logs:
+- `🚀 Invoice app page initialized` → confirms client hydration
+- `💾 Saving invoice to localStorage` → when saving
+- `🧠 App component mounted` → confirms successful load
+- `📦 Loading Next.js config...` → build-time confirmation
