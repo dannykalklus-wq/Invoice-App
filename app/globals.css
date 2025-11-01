@@ -2,17 +2,40 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: 0 0% 100%;
-  --foreground: 240 10% 3.9%;
-}
-
+/* Neutral gray/white theme */
 body {
-  @apply bg-background text-foreground;
+  @apply bg-neutral-50 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-50;
 }
 
-/* Debug visual */
-body::after {
-  content: "🧩 Tailwind loaded";
-  display: none;
+.btn {
+  @apply inline-flex items-center justify-center rounded-lg border border-neutral-300 bg-white dark:bg-neutral-900 px-4 py-2 text-sm font-medium transition hover:bg-neutral-100 dark:hover:bg-neutral-800;
+}
+
+.btn-sm {
+  @apply inline-flex items-center justify-center rounded-lg border border-neutral-300 bg-white px-2 py-1 text-sm hover:bg-neutral-100;
+}
+
+.input {
+  @apply w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900;
+}
+
+.textarea {
+  @apply w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm resize-y dark:border-neutral-700 dark:bg-neutral-900;
+}
+
+.label {
+  @apply block text-sm font-medium mb-1 text-neutral-700 dark:text-neutral-200;
+}
+
+.card {
+  @apply rounded-2xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900;
+}
+.card-h {
+  @apply px-4 py-3 border-b border-neutral-200 dark:border-neutral-800;
+}
+.card-t {
+  @apply text-lg font-semibold;
+}
+.card-c {
+  @apply p-4;
 }
