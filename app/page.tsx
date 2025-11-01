@@ -3,6 +3,7 @@
 export const dynamic = 'force-dynamic';
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
 import { Plus, Trash2, Printer, Save, Upload, RefreshCcw, Sun, Moon, Eye, Trash, Search, FileDown } from "lucide-react";
 import { useReactToPrint } from "react-to-print";
 
@@ -269,6 +270,19 @@ export default function App() {
 
   // Tabs
   const [tab, setTab] = useState<"create" | "invoices">("create");
+      // --- Supabase connection test (runs once on mount) ---
+  useEffect(() => {
+    const testConnection = async () => {
+      console.log("🔌 Testing Supabase connection...");
+      const { data, error } = await supabase.from("invoices").select("*").limit(1);
+      if (error) {
+        console.error("❌ Supabase connection failed:", error.message);
+      } else {
+        console.log("✅ Supabase connected successfully! Sample:", data);
+      }
+    };
+    testConnection();
+  }, []);
 
   // Printing current draft (Create tab)
   const printRef = useRef<HTMLDivElement>(null);
