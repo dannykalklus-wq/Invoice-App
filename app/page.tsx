@@ -239,61 +239,54 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
             </table>
           </div>
 
-          {/* BANK DETAILS (left) + TOTALS (right), then full-width paragraphs below */}
-          <div className="mt-6 space-y-6">
-
-            {/* Row 1 */}
-            <div className="grid grid-cols-2 gap-6">
-              {/* Bank left */}
-              <div className="tile avoid-break">
-                <div className="print-h2 mb-1">Bank Details</div>
-                <div className="whitespace-pre-wrap text-sm">
-                  {invoice.bankDetails || "—"}
-                </div>
-              </div>
-
-              {/* Totals right */}
-              <div className="justify-self-end">
-                <div className="totals avoid-break">
-                  <div className="kv text-sm py-1">
-                    <div>Subtotal</div>
-                    <div className="num">{formatMoney(subTotal, invoice.currency)}</div>
-                  </div>
-                  <div className="kv text-sm py-1">
-                    <div>Discount</div>
-                    <div className="num">{formatMoney(Number(invoice.discount || 0), invoice.currency)}</div>
-                  </div>
-                  <div className="kv text-sm py-1">
-                    <div>VAT ({invoice.taxRate || 0}%)</div>
-                    <div className="num">{formatMoney(vat, invoice.currency)}</div>
-                  </div>
-                  <div className="kv text-sm py-1">
-                    <div>Shipping</div>
-                    <div className="num">{formatMoney(Number(invoice.shipping || 0), invoice.currency)}</div>
-                  </div>
-                  <div className="total kv text-base mt-2 pt-2">
-                    <div>Total</div>
-                    <div className="num">{formatMoney(total, invoice.currency)}</div>
-                  </div>
-                </div>
+          {/* BANK DETAILS (left) + TOTALS (right) */}
+          <div className="mt-6 grid grid-cols-2 gap-6">
+            {/* Bank tile ALWAYS visible so you see it in preview too */}
+            <div className="tile avoid-break">
+              <div className="print-h2 mb-1">Bank Details</div>
+              <div className="whitespace-pre-wrap text-sm">
+                {invoice.bankDetails || "—"}
               </div>
             </div>
 
-            {/* Row 2: Full width Additional + Terms under the boxes */}
-            {(invoice.additionalDetails || invoice.terms) && (
-              <div className="col-span-2 text-sm print-line">
-                {invoice.additionalDetails && (
-                  <div className="whitespace-pre-wrap mb-3">{invoice.additionalDetails}</div>
-                )}
-                {invoice.terms && (
-                  <div className="whitespace-pre-wrap">{invoice.terms}</div>
-                )}
+            <div className="justify-self-end">
+              <div className="totals avoid-break">
+                <div className="kv text-sm py-1">
+                  <div>Subtotal</div>
+                  <div className="num">{formatMoney(subTotal, invoice.currency)}</div>
+                </div>
+                <div className="kv text-sm py-1">
+                  <div>Discount</div>
+                  <div className="num">{formatMoney(Number(invoice.discount || 0), invoice.currency)}</div>
+                </div>
+                <div className="kv text-sm py-1">
+                  <div>VAT ({invoice.taxRate || 0}%)</div>
+                  <div className="num">{formatMoney(vat, invoice.currency)}</div>
+                </div>
+                <div className="kv text-sm py-1">
+                  <div>Shipping</div>
+                  <div className="num">{formatMoney(Number(invoice.shipping || 0), invoice.currency)}</div>
+                </div>
+                <div className="total kv text-base mt-2 pt-2">
+                  <div>Total</div>
+                  <div className="num">{formatMoney(total, invoice.currency)}</div>
+                </div>
               </div>
-            )}
+            </div>
           </div>
 
-          {/* SALUTATION */}
-          <div className="mt-10 text-center text-sm italic avoid-break">
+          {/* ADDITIONAL + TERMS — ALWAYS render; Terms centered per your request */}
+          <div className="mt-6 space-y-6">
+            <div className="text-sm print-line whitespace-pre-wrap">
+              {invoice.additionalDetails || " "}
+            </div>
+            <div className="text-sm print-line whitespace-pre-wrap text-center">
+              {invoice.terms || " "}
+            </div>
+          </div>
+
+          {/* SALUTATION — bold + well centered */}
+          <div className="mt-10 text-center text-sm font-bold">
             Thank you for doing business with Lexvor Group Limited
           </div>
         </div>
@@ -670,12 +663,34 @@ export default function App() {
               </div>
             </section>
 
+            {/* Notes / terms editor */}
+            <section className="card">
+              <div className="card-h"><div className="card-t">Bank Details, Additional Info & Terms</div></div>
+              <div className="card-c grid md:grid-cols-3 gap-4">
+                <div>
+                  <label className="label">Bank Details</label>
+                  <textarea className="textarea" rows={5} value={invoice.bankDetails}
+                    onChange={(e) => setInvoice({ ...invoice, bankDetails: e.target.value })} />
+                </div>
+                <div>
+                  <label className="label">Additional Details</label>
+                  <textarea className="textarea" rows={5} value={invoice.additionalDetails}
+                    onChange={(e) => setInvoice({ ...invoice, additionalDetails: e.target.value })} />
+                </div>
+                <div>
+                  <label className="label">Terms & Conditions</label>
+                  <textarea className="textarea" rows={5} value={invoice.terms}
+                    onChange={(e) => setInvoice({ ...invoice, terms: e.target.value })} />
+                </div>
+              </div>
+            </section>
+
             {/* Hidden print area for draft */}
             <div className="hidden">
               <div ref={printRef}><PrintInvoice invoice={invoice} /></div>
             </div>
 
-            {/* On-screen Preview (A4) */}
+            {/* On-screen Preview (A4) — shows Bank/Additional/Terms now too */}
             <section className="card mt-6">
               <div className="card-h"><div className="card-t">Preview (A4, print-ready)</div></div>
               <div className="card-c">
