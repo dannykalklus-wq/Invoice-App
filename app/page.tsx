@@ -3,8 +3,8 @@
 export const dynamic = 'force-dynamic';
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { supabase } from "../lib/supabaseClient";
-import { Plus, Trash2, Printer, Save, Upload, RefreshCcw, Sun, Moon, Eye, Trash, Search, FileDown } from "lucide-react";
+import { supabase } from "../lib/supabaseClient"; // use "@/lib/..." if you configured alias
+import { Plus, Trash2, Printer, Save, Upload, RefreshCcw, Sun, Moon, Eye, Trash, Search } from "lucide-react";
 import { useReactToPrint } from "react-to-print";
 
 /* =================== Types =================== */
@@ -121,7 +121,7 @@ const useTheme = () => {
   return { dark, setDark };
 };
 
-/* =================== PDF component =================== */
+/* =================== PDF component (polished) =================== */
 const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
   ({ invoice }, ref) => {
     const subTotal = invoice.items.reduce((sum, it) => sum + Number(it.qty || 0) * Number(it.rate || 0), 0);
@@ -129,107 +129,129 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
     const total = subTotal - Number(invoice.discount || 0) + vat + Number(invoice.shipping || 0);
 
     return (
-      <div ref={ref} className="bg-white text-black p-8">
-        <div className="flex items-start justify-between gap-6">
-          <div className="flex items-center gap-4">
-            {invoice.logoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={invoice.logoUrl} alt="Logo" className="h-16 w-16 object-contain" />
-            ) : (
-              <div className="h-16 w-16 rounded bg-neutral-200" />
-            )}
-            <div>
-              <div className="text-xl font-semibold">{invoice.companyName}</div>
-              <div className="text-sm whitespace-pre-wrap">{invoice.companyAddress}</div>
-              <div className="text-sm">{invoice.companyEmail}</div>
-              <div className="text-sm">{invoice.companyPhone}</div>
-              {invoice.companyTin && <div className="text-sm">TIN: {invoice.companyTin}</div>}
+      <div ref={ref} className="print-area">
+        <div className="print-inner">
+
+          {/* Optional watermark: add class .show-watermark to print-area to enable */}
+          <div className="watermark">INVOICE</div>
+
+          {/* HEADER */}
+          <div className="pt-6 flex items-start justify-between gap-6">
+            <div className="band flex gap-4">
+              {invoice.logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={invoice.logoUrl} alt="Logo" className="h-16 w-16 object-contain" />
+              ) : (
+                <div className="h-16 w-16 rounded bg-neutral-200" />
+              )}
+              <div className="print-line">
+                <div className="text-xl font-semibold">{invoice.companyName}</div>
+                {invoice.companyAddress && <div className="text-sm whitespace-pre-wrap">{invoice.companyAddress}</div>}
+                {invoice.companyEmail && <div className="text-sm">{invoice.companyEmail}</div>}
+                {invoice.companyPhone && <div className="text-sm">{invoice.companyPhone}</div>}
+                {invoice.companyTin && <div className="text-sm">TIN: {invoice.companyTin}</div>}
+              </div>
+            </div>
+
+            <div className="text-right print-line">
+              <div className="print-h1">INVOICE</div>
+              <div className="mt-2 text-sm">
+                <div>Invoice No: <span className="font-semibold">{invoice.invoiceNo}</span></div>
+                <div>Invoice Date: {invoice.invoiceDate}</div>
+                <div>Due Date: {invoice.dueDate}</div>
+              </div>
             </div>
           </div>
-          <div className="text-right">
-            <div className="text-3xl font-bold tracking-tight">INVOICE</div>
-            <div className="mt-2 text-sm">Invoice No: <span className="font-medium">{invoice.invoiceNo}</span></div>
-            <div className="text-sm">Invoice Date: {invoice.invoiceDate}</div>
-            <div className="text-sm">Due Date: {invoice.dueDate}</div>
-            {/* No payment status/currency labels in PDF header */}
-          </div>
-        </div>
 
-        <div className="mt-6 grid grid-cols-2 gap-6">
-          <div>
-            <div className="text-sm font-semibold">Bill To</div>
-            <div className="mt-1 font-medium">{invoice.clientName}</div>
-            <div className="text-sm">Phone: {invoice.clientPhone}</div>
-            <div className="text-sm">{invoice.clientEmail}</div>
-            <div className="text-sm whitespace-pre-wrap">{invoice.clientAddress}</div>
+          {/* BILL TO */}
+          <div className="mt-6">
+            <div className="print-h2">Bill To</div>
+            <div className="mt-1 print-line">
+              {invoice.clientName && <div className="font-medium">{invoice.clientName}</div>}
+              {invoice.clientPhone && <div className="text-sm">Phone: {invoice.clientPhone}</div>}
+              {invoice.clientEmail && <div className="text-sm">{invoice.clientEmail}</div>}
+              {invoice.clientAddress && <div className="text-sm whitespace-pre-wrap">{invoice.clientAddress}</div>}
+            </div>
           </div>
-        </div>
 
-        <div className="mt-6 overflow-hidden rounded border">
-          <table className="w-full text-sm">
-            <thead className="bg-neutral-100">
-              <tr>
-                <th className="px-3 py-2 text-left">Description</th>
-                <th className="px-3 py-2 text-right">Qty</th>
-                <th className="px-3 py-2 text-right">Rate</th>
-                <th className="px-3 py-2 text-right">Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              {invoice.items.map((it, i) => (
-                <tr className="border-t avoid-break" key={i}>
-                  <td className="px-3 py-2">{it.description}</td>
-                  <td className="px-3 py-2 text-right">{it.qty}</td>
-                  <td className="px-3 py-2 text-right">{formatMoney(Number(it.rate || 0), invoice.currency)}</td>
-                  <td className="px-3 py-2 text-right">
-                    {formatMoney(Number(it.qty || 0) * Number(it.rate || 0), invoice.currency)}
-                  </td>
+          {/* LINE ITEMS */}
+          <div className="mt-6 overflow-hidden rounded border border-line">
+            <table className="table text-sm">
+              <colgroup>
+                <col className="col-desc" />
+                <col className="col-qty" />
+                <col className="col-rate" />
+                <col className="col-amt" />
+              </colgroup>
+              <thead>
+                <tr>
+                  <th className="text-left">Description</th>
+                  <th className="num">Qty</th>
+                  <th className="num">Rate</th>
+                  <th className="num">Amount</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="mt-6 grid grid-cols-2 gap-6">
-          <div className="text-sm space-y-4">
-            {invoice.bankDetails ? (
-              <div>
-                <div className="font-semibold">Bank Details</div>
-                <div className="whitespace-pre-wrap mt-1">{invoice.bankDetails}</div>
-              </div>
-            ) : null}
-            {invoice.additionalDetails ? (
-              <div>
-                <div className="font-semibold">Additional Details</div>
-                <div className="whitespace-pre-wrap mt-1">{invoice.additionalDetails}</div>
-              </div>
-            ) : null}
-            {invoice.terms ? (
-              <div>
-                <div className="font-semibold">Terms &amp; Conditions</div>
-                <div className="whitespace-pre-wrap mt-1">{invoice.terms}</div>
-              </div>
-            ) : null}
+              </thead>
+              <tbody>
+                {invoice.items.map((it, i) => (
+                  <tr className="avoid-break" key={i}>
+                    <td className="wrap">{it.description}</td>
+                    <td className="num">{Number(it.qty || 0)}</td>
+                    <td className="num">{formatMoney(Number(it.rate || 0), invoice.currency)}</td>
+                    <td className="num">{formatMoney(Number(it.qty || 0) * Number(it.rate || 0), invoice.currency)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-          <div className="justify-self-end w-64">
-            <div className="flex justify-between text-sm py-1"><div>Subtotal</div><div>{formatMoney(subTotal, invoice.currency)}</div></div>
-            <div className="flex justify-between text-sm py-1"><div>Discount</div><div>{formatMoney(Number(invoice.discount || 0), invoice.currency)}</div></div>
-            <div className="flex justify-between text-sm py-1"><div>VAT ({invoice.taxRate || 0}%)</div><div>{formatMoney(vat, invoice.currency)}</div></div>
-            <div className="flex justify-between text-sm py-1"><div>Shipping</div><div>{formatMoney(Number(invoice.shipping || 0), invoice.currency)}</div></div>
-            <div className="border-t mt-2 pt-2 flex justify-between font-semibold">
-              <div>Total</div><div>{formatMoney(subTotal - Number(invoice.discount || 0) + vat + Number(invoice.shipping || 0), invoice.currency)}</div>
+
+          {/* INFO TILES + TOTALS */}
+          <div className="mt-6 space-y-6">
+            {/* Three equal tiles */}
+            <div className="grid grid-cols-3 gap-6 text-sm">
+              <div className="tile avoid-break">
+                <div className="print-h2 mb-1">Bank Details</div>
+                <div className="whitespace-pre-wrap">{invoice.bankDetails || "—"}</div>
+              </div>
+              <div className="tile avoid-break">
+                <div className="print-h2 mb-1">Additional Details</div>
+                <div className="whitespace-pre-wrap">{invoice.additionalDetails || "—"}</div>
+              </div>
+              <div className="tile avoid-break">
+                <div className="print-h2 mb-1">Terms &amp; Conditions</div>
+                <div className="whitespace-pre-wrap">{invoice.terms || "—"}</div>
+              </div>
+            </div>
+
+            {/* Totals card */}
+            <div className="flex justify-end">
+              <div className="totals avoid-break">
+                <div className="kv text-sm py-1"><div>Subtotal</div><div className="num">{formatMoney(subTotal, invoice.currency)}</div></div>
+                <div className="kv text-sm py-1"><div>Discount</div><div className="num">{formatMoney(Number(invoice.discount || 0), invoice.currency)}</div></div>
+                <div className="kv text-sm py-1"><div>VAT ({invoice.taxRate || 0}%)</div><div className="num">{formatMoney(vat, invoice.currency)}</div></div>
+                <div className="kv text-sm py-1"><div>Shipping</div><div className="num">{formatMoney(Number(invoice.shipping || 0), invoice.currency)}</div></div>
+                <div className="total kv text-base mt-2 pt-2"><div>Total</div><div className="num">{formatMoney(total, invoice.currency)}</div></div>
+              </div>
             </div>
           </div>
+
+          {/* SALUTATION */}
+          <div className="mt-10 text-center text-sm italic avoid-break">
+            Thank you for doing business with Lexvor Group Limited
+          </div>
         </div>
 
-        <div className="mt-8 text-center text-sm italic">Thank you for doing business with Lexvor Group Limited</div>
+        {/* Fixed footer (page numbers & company) */}
+        <div className="print-footer">
+          <div>{invoice.companyName}</div>
+          <div className="pageno"></div>
+        </div>
       </div>
     );
   }
 );
 PrintInvoice.displayName = "PrintInvoice";
 
-/* =================== Main App =================== */
+/* =================== Main App (unchanged logic, premium font now applied) =================== */
 export default function App() {
   const { dark, setDark } = useTheme();
 
@@ -264,25 +286,12 @@ export default function App() {
   }, [profile.logoUrl, profile.companyName, profile.companyEmail, profile.companyPhone, profile.companyAddress, profile.companyTin, currency]);
   useEffect(() => { safeWrite("__invoice_draft", invoice); }, [invoice]);
 
-  // Local DB
+  // Remote DB list (hook up to Supabase later; still keeping local cache behavior if needed)
   const [db, setDb] = useState<Invoice[]>(() => safeRead<Invoice[]>("__invoices_db", []));
   useEffect(() => { safeWrite("__invoices_db", db); }, [db]);
 
   // Tabs
   const [tab, setTab] = useState<"create" | "invoices">("create");
-      // --- Supabase connection test (runs once on mount) ---
-  useEffect(() => {
-    const testConnection = async () => {
-      console.log("🔌 Testing Supabase connection...");
-      const { data, error } = await supabase.from("invoices").select("*").limit(1);
-      if (error) {
-        console.error("❌ Supabase connection failed:", error.message);
-      } else {
-        console.log("✅ Supabase connected successfully! Sample:", data);
-      }
-    };
-    testConnection();
-  }, []);
 
   // Printing current draft (Create tab)
   const printRef = useRef<HTMLDivElement>(null);
@@ -345,7 +354,6 @@ export default function App() {
     const src = db.find((r) => r.invoiceNo === invoiceNo);
     if (!src) return;
     setPrintInvoiceData({ ...src });
-    // wait state commit then print
     setTimeout(() => { handlePrintRow(); }, 50);
   };
 
@@ -363,10 +371,25 @@ export default function App() {
     );
   }, [db, search]);
 
+  // Supabase smoke test (optional)
+  useEffect(() => {
+    const test = async () => {
+      try {
+        console.log("🔌 Testing Supabase connection...");
+        const { data, error } = await supabase.from("invoices").select("*").limit(1);
+        if (error) console.error("❌ Supabase connection failed:", error.message);
+        else console.log("✅ Supabase connected successfully! Sample:", data);
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    test();
+  }, []);
+
   return (
     <main className="min-h-screen bg-neutral-50 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-50">
       {/* Top bar */}
-      <div className="sticky top-0 z-10 bg-white/90 dark:bg-neutral-900/90 backdrop-blur border-b border-neutral-200 dark:border-neutral-800">
+      <div className="sticky top-0 z-10 bg-white/90 dark:bg-neutral-900/90 backdrop-blur border-b border-line dark:border-neutral-800">
         <div className="max-w-6xl mx-auto px-4 py-3 flex flex-wrap gap-3 items-center justify-between">
           <div className="text-lg font-semibold">Invoice System</div>
           <div className="flex items-center gap-2">
@@ -388,26 +411,15 @@ export default function App() {
       {/* Tabs */}
       <div className="max-w-6xl mx-auto p-4">
         <div className="mb-4 inline-flex rounded-xl border overflow-hidden">
-          <button
-            onClick={() => setTab("create")}
-            className={`tab-btn ${tab === "create" ? "tab-btn-active" : ""}`}
-          >
-            Create Invoice
-          </button>
-          <button
-            onClick={() => setTab("invoices")}
-            className={`tab-btn border-l ${tab === "invoices" ? "tab-btn-active" : ""}`}
-          >
-            Invoices
-          </button>
+          <button onClick={() => setTab("create")} className={`tab-btn ${tab === "create" ? "tab-btn-active" : ""}`}>Create Invoice</button>
+          <button onClick={() => setTab("invoices")} className={`tab-btn border-l ${tab === "invoices" ? "tab-btn-active" : ""}`}>Invoices</button>
         </div>
 
         {tab === "create" && (
           <>
             {/* Actions */}
             <div className="flex flex-wrap gap-2 mb-4">
-              {/* Replace any duplicate action with a clear Export to PDF for this page */}
-              <button className="btn btn-primary" onClick={handlePrintDraft}>
+              <button className="btn-primary" onClick={handlePrintDraft}>
                 <Printer className="h-4 w-4 mr-2" /> Export to PDF
               </button>
               <button className="btn" onClick={saveToDB}>
@@ -473,11 +485,7 @@ export default function App() {
                 </div>
                 <div>
                   <label className="label">Payment Status</label>
-                  <select
-                    className="input"
-                    value={invoice.paymentStatus}
-                    onChange={(e) => setInvoice({ ...invoice, paymentStatus: e.target.value as PaymentStatus })}
-                  >
+                  <select className="input" value={invoice.paymentStatus} onChange={(e) => setInvoice({ ...invoice, paymentStatus: e.target.value as PaymentStatus })}>
                     <option>Unpaid</option>
                     <option>Partially Paid</option>
                     <option>Paid</option>
@@ -509,7 +517,7 @@ export default function App() {
             <section className="card mb-6">
               <div className="card-h"><div className="card-t">Items</div></div>
               <div className="card-c">
-                <div className="overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800">
+                <div className="overflow-hidden rounded-lg border border-line dark:border-neutral-800">
                   <table className="w-full text-sm">
                     <thead className="bg-neutral-100 dark:bg-neutral-800/60 text-left">
                       <tr>
@@ -522,20 +530,20 @@ export default function App() {
                     </thead>
                     <tbody>
                       {invoice.items.map((it, i) => (
-                        <tr key={i} className="border-t border-neutral-200 dark:border-neutral-800">
+                        <tr key={i} className="border-t border-line dark:border-neutral-800">
                           <td className="px-3 py-2">
                             <input className="input" placeholder="Item / service" value={it.description}
                               onChange={(e) => updateItem(i, { description: e.target.value })} />
                           </td>
                           <td className="px-3 py-2">
-                            <input className="input text-right" type="number" min={0} value={it.qty}
+                            <input className="input text-right font-mono" type="number" min={0} value={it.qty}
                               onChange={(e) => updateItem(i, { qty: Number(e.target.value) })} />
                           </td>
                           <td className="px-3 py-2">
-                            <input className="input text-right" type="number" step="0.01" value={it.rate}
+                            <input className="input text-right font-mono" type="number" step="0.01" value={it.rate}
                               onChange={(e) => updateItem(i, { rate: Number(e.target.value) })} />
                           </td>
-                          <td className="px-3 py-2 text-right align-middle">
+                          <td className="px-3 py-2 text-right align-middle font-mono">
                             {formatMoney(Number(it.qty || 0) * Number(it.rate || 0), invoice.currency)}
                           </td>
                           <td className="px-3 py-2 text-right">
@@ -550,83 +558,55 @@ export default function App() {
                 <div className="flex justify-between mt-3">
                   <button className="btn" onClick={addItem}><Plus className="h-4 w-4 mr-2" /> Add Item</button>
                   <div className="w-80 space-y-2">
-                    <div className="flex justify-between text-sm py-1"><div>Subtotal</div><div>{formatMoney(subTotal, invoice.currency)}</div></div>
+                    <div className="flex justify-between text-sm py-1"><div>Subtotal</div><div className="font-mono">{formatMoney(subTotal, invoice.currency)}</div></div>
 
                     <div className="flex items-center justify-between text-sm py-1 gap-2">
                       <div className="flex items-center gap-2">
                         <span className="label !mb-0">VAT %</span>
-                        <input className="input w-24" type="number" step="0.01" value={invoice.taxRate}
+                        <input className="input w-24 font-mono" type="number" step="0.01" value={invoice.taxRate}
                           onChange={(e) => setInvoice({ ...invoice, taxRate: Number(e.target.value) })} />
                       </div>
-                      <div>{formatMoney(vat, invoice.currency)}</div>
+                      <div className="font-mono">{formatMoney(vat, invoice.currency)}</div>
                     </div>
 
                     <div className="flex items-center justify-between text-sm py-1 gap-2">
                       <div className="flex items-center gap-2">
                         <span className="label !mb-0">Discount</span>
-                        <input className="input w-28" type="number" step="0.01" value={invoice.discount}
+                        <input className="input w-28 font-mono" type="number" step="0.01" value={invoice.discount}
                           onChange={(e) => setInvoice({ ...invoice, discount: Number(e.target.value) })} />
                       </div>
-                      <div>{formatMoney(Number(invoice.discount || 0), invoice.currency)}</div>
+                      <div className="font-mono">{formatMoney(Number(invoice.discount || 0), invoice.currency)}</div>
                     </div>
 
                     <div className="flex items-center justify-between text-sm py-1 gap-2">
                       <div className="flex items-center gap-2">
                         <span className="label !mb-0">Shipping</span>
-                        <input className="input w-28" type="number" step="0.01" value={invoice.shipping}
+                        <input className="input w-28 font-mono" type="number" step="0.01" value={invoice.shipping}
                           onChange={(e) => setInvoice({ ...invoice, shipping: Number(e.target.value) })} />
                       </div>
-                      <div>{formatMoney(Number(invoice.shipping || 0), invoice.currency)}</div>
+                      <div className="font-mono">{formatMoney(Number(invoice.shipping || 0), invoice.currency)}</div>
                     </div>
 
                     <div className="border-t mt-2 pt-2 flex justify-between font-semibold">
-                      <div>Total</div><div>{formatMoney(total, invoice.currency)}</div>
+                      <div>Total</div><div className="font-mono">{formatMoney(total, invoice.currency)}</div>
                     </div>
                   </div>
                 </div>
               </div>
             </section>
 
-            {/* Notes / terms */}
-            <section className="card">
-              <div className="card-h"><div className="card-t">Bank Details, Additional Info & Terms</div></div>
-              <div className="card-c grid md:grid-cols-3 gap-4">
-                <div>
-                  <label className="label">Bank Details</label>
-                  <textarea className="textarea" rows={5} value={invoice.bankDetails}
-                    onChange={(e) => setInvoice({ ...invoice, bankDetails: e.target.value })} />
-                </div>
-                <div>
-                  <label className="label">Additional Details</label>
-                  <textarea className="textarea" rows={5} value={invoice.additionalDetails}
-                    onChange={(e) => setInvoice({ ...invoice, additionalDetails: e.target.value })} />
-                </div>
-                <div>
-                  <label className="label">Terms & Conditions</label>
-                  <textarea className="textarea" rows={5} value={invoice.terms}
-                    onChange={(e) => setInvoice({ ...invoice, terms: e.target.value })} />
-                </div>
-              </div>
-            </section>
+            {/* Editor-only: Hidden print area for draft */}
+            <div className="hidden"><div ref={printRef}><PrintInvoice invoice={invoice} /></div></div>
 
-            {/* Print area for draft */}
-            <div className="hidden">
-              <div ref={printRef}><PrintInvoice invoice={invoice} /></div>
-            </div>
-
-            {/* Visible Preview */}
+            {/* Visible Preview (matches print) */}
             <section className="card mt-6">
               <div className="card-h"><div className="card-t">Preview (A4, print-ready)</div></div>
               <div className="card-c">
-                <div className="bg-white mx-auto shadow-sm" style={{ width: "210mm" }}>
-                  <div className="mx-auto" style={{ width: "190mm" }}>
+                <div className="print-area mx-auto shadow-sm">
+                  <div className="print-inner mx-auto">
                     <PrintInvoice invoice={invoice} />
                   </div>
                 </div>
-                <style>{`
-                  @page { size: A4; margin: 16mm; }
-                  @media print { html, body { background: white !important; } }
-                `}</style>
               </div>
             </section>
           </>
@@ -636,7 +616,6 @@ export default function App() {
           <section className="card">
             <div className="card-h flex items-center justify-between">
               <div className="card-t">Invoices</div>
-              {/* Search + quick select */}
               <div className="flex items-center gap-2">
                 <div className="relative">
                   <Search className="h-4 w-4 absolute left-2 top-1/2 -translate-y-1/2 text-neutral-400" />
@@ -664,7 +643,7 @@ export default function App() {
             </div>
 
             <div className="card-c">
-              <div className="overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-800">
+              <div className="overflow-hidden rounded-xl border border-line dark:border-neutral-800">
                 <table className="w-full text-sm">
                   <thead className="bg-neutral-100 dark:bg-neutral-800/60 text-left">
                     <tr>
@@ -683,17 +662,16 @@ export default function App() {
                       const v = sub * (Number(r.taxRate || 0) / 100);
                       const t = sub - Number(r.discount || 0) + v + Number(r.shipping || 0);
                       return (
-                        <tr key={r.invoiceNo} className="border-t border-neutral-200 dark:border-neutral-800">
+                        <tr key={r.invoiceNo} className="border-top border-line dark:border-neutral-800">
                           <td className="px-3 py-2 font-mono">{r.invoiceNo}</td>
                           <td className="px-3 py-2">{r.invoiceDate}</td>
                           <td className="px-3 py-2">{r.dueDate}</td>
                           <td className="px-3 py-2">{r.clientName}</td>
                           <td className="px-3 py-2">{r.paymentStatus}</td>
-                          <td className="px-3 py-2">{formatMoney(t, r.currency || invoice.currency)}</td>
+                          <td className="px-3 py-2 font-mono">{formatMoney(t, r.currency || invoice.currency)}</td>
                           <td className="px-3 py-2 text-right">
                             <div className="flex justify-end gap-2">
                               <button className="btn-sm btn-ghost-strong" title="View/Edit" onClick={() => viewToDraft(r.invoiceNo)}><Eye className="h-4 w-4" /></button>
-                              {/* Export to PDF (replaces Duplicate) */}
                               <button className="btn-sm btn-primary" title="Export PDF" onClick={() => exportRowToPDF(r.invoiceNo)}><Printer className="h-4 w-4" /></button>
                               <button className="btn-sm btn-danger" title="Delete" onClick={() => deleteFromDB(r.invoiceNo)}><Trash className="h-4 w-4" /></button>
                             </div>
