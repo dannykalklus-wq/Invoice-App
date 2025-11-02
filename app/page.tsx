@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic';
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import { supabase } from "../lib/supabaseClient";
 import { Plus, Trash2, Printer, Save, Upload, RefreshCcw, Sun, Moon, Eye, Trash, Search, FileDown } from "lucide-react";
 import { useReactToPrint } from "react-to-print";
 
