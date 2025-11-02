@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic';
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { supabase } from "../lib/supabaseClient";
+import { supabase } from "../lib/supabaseClient"; // keep if you already created this; otherwise it is harmless
 import {
   Plus, Trash2, Printer, Save, Upload, RefreshCcw,
   Sun, Moon, Eye, Trash, Search
@@ -26,13 +26,15 @@ type Invoice = {
   paymentStatus: PaymentStatus; currency: string;
 };
 
-/* ============ Helpers ============ */
+/* =================== Helpers =================== */
 const num = (v: any) => { const n = typeof v === "number" ? v : parseFloat(String(v).replace(/,/g, "")); return Number.isFinite(n) ? n : 0; };
 const safeRead = <T,>(k: string, f: T): T => { if (typeof window === "undefined") return f; try { const r = localStorage.getItem(k); return r ? (JSON.parse(r) as T) : f; } catch { return f; } };
 const safeWrite = (k: string, v: unknown) => { if (typeof window !== "undefined") try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
 
-/* ============ Defaults ============ */
-const DEFAULT_PROFILE: CompanyProfile = { logoUrl: "", companyName: "Lexvor Group Ltd", companyEmail: "", companyPhone: "", companyAddress: "", companyTin: "" };
+/* =================== Defaults =================== */
+const DEFAULT_PROFILE: CompanyProfile = {
+  logoUrl: "", companyName: "Lexvor Group Ltd", companyEmail: "", companyPhone: "", companyAddress: "", companyTin: ""
+};
 const newInvoiceFromProfile = (p: CompanyProfile, currency="GHS"): Invoice => ({
   invoiceNo:"INV-0001", invoiceDate:new Date().toISOString().slice(0,10), dueDate:new Date(Date.now()+7*864e5).toISOString().slice(0,10),
   clientName:"", clientPhone:"", clientEmail:"", clientAddress:"",
@@ -42,7 +44,7 @@ const newInvoiceFromProfile = (p: CompanyProfile, currency="GHS"): Invoice => ({
   taxRate:0, discount:0, shipping:0, paymentStatus:"Unpaid", currency
 });
 
-/* ============ Theme & money ============ */
+/* =================== Theme & currency =================== */
 const formatMoney = (n:number, c:string) => new Intl.NumberFormat(undefined, { style:"currency", currency:c }).format(num(n));
 const useTheme = () => {
   const [dark, setDark] = useState<boolean>(() => {
@@ -54,7 +56,7 @@ const useTheme = () => {
   return { dark, setDark };
 };
 
-/* =================== PDF component (Excel-style header) =================== */
+/* =================== Print/PDF component =================== */
 const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
   ({ invoice }, ref) => {
     const subTotal = invoice.items.reduce((s, it) => s + num(it.qty)*num(it.rate), 0);
@@ -62,19 +64,19 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
     const total = subTotal - num(invoice.discount) + vat + num(invoice.shipping);
 
     return (
-      <div ref={ref} className="print-area bg-white text-black">
+      <div ref={ref} className="print-area">
         <div className="print-inner py-6">
           {/* HEADER */}
           <div className="pt-2 grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
             <div>
-              <div className="company-title font-bold text-2xl">{invoice.companyName || "Company Name"}</div>
+              <div className="font-bold text-2xl">{invoice.companyName || "Company Name"}</div>
               {invoice.companyTin && <div className="text-sm mt-1">TIN: {invoice.companyTin}</div>}
               {invoice.companyAddress && <div className="text-sm mt-1 whitespace-pre-wrap">{invoice.companyAddress}</div>}
               {invoice.companyPhone && <div className="text-sm mt-1">Phone: {invoice.companyPhone}</div>}
               {invoice.companyEmail && <div className="text-sm mt-1">Email: {invoice.companyEmail}</div>}
             </div>
             <div className="text-right">
-              <div className="print-h1 text-2xl font-bold tracking-tight">INVOICE</div>
+              <div className="text-2xl font-bold tracking-tight">INVOICE</div>
               <div className="mt-6 inline-block">
                 {invoice.logoUrl
                   ? <img src={invoice.logoUrl} alt="Logo" className="h-14 object-contain inline-block" style={{ maxWidth:"140px" }} />
@@ -84,7 +86,7 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
             </div>
           </div>
 
-          {/* BILL TO + META */}
+          {/* BILL TO + META (Excel style tiles) */}
           <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
             <div>
               <div className="uppercase text-sm font-semibold text-neutral-600">BILL TO</div>
@@ -113,20 +115,25 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
 
           {/* ITEMS */}
           <div className="mt-6 overflow-hidden rounded border border-neutral-200">
-            <table className="table text-sm">
+            <table className="w-full text-sm">
               <colgroup>
                 <col /><col style={{ width:"80px" }} /><col style={{ width:"120px" }} /><col style={{ width:"140px" }} />
               </colgroup>
               <thead className="bg-neutral-100">
-                <tr><th>Description</th><th className="text-right">Qty</th><th className="text-right">Rate</th><th className="text-right">Amount</th></tr>
+                <tr>
+                  <th className="text-left px-3 py-2">Description</th>
+                  <th className="text-right px-3 py-2">Qty</th>
+                  <th className="text-right px-3 py-2">Rate</th>
+                  <th className="text-right px-3 py-2">Amount</th>
+                </tr>
               </thead>
               <tbody>
                 {invoice.items.map((it,i)=>(
-                  <tr key={i} className="avoid-break">
-                    <td className="whitespace-pre-wrap">{it.description}</td>
-                    <td className="text-right">{num(it.qty)}</td>
-                    <td className="text-right">{formatMoney(num(it.rate), invoice.currency)}</td>
-                    <td className="text-right">{formatMoney(num(it.qty)*num(it.rate), invoice.currency)}</td>
+                  <tr key={i} className="border-t">
+                    <td className="px-3 py-2 whitespace-pre-wrap">{it.description}</td>
+                    <td className="px-3 py-2 text-right">{num(it.qty)}</td>
+                    <td className="px-3 py-2 text-right">{formatMoney(num(it.rate), invoice.currency)}</td>
+                    <td className="px-3 py-2 text-right">{formatMoney(num(it.qty)*num(it.rate), invoice.currency)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -135,25 +142,29 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
 
           {/* BANK + TOTALS */}
           <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="avoid-break rounded-lg border border-neutral-200 p-4">
+            <div className="rounded-lg border border-neutral-200 p-4">
               <div className="text-sm font-semibold text-neutral-600">BANK DETAILS</div>
               <div className="whitespace-pre-wrap text-sm mt-2">{invoice.bankDetails || "—"}</div>
             </div>
-            <div className="justify-self-end w-full max-w-[280px] md:max-w-[320px]">
-              <div className="rounded-lg border border-neutral-200 p-4 totals">
-                <div className="flex justify-between text-sm py-1 kv"><div>Subtotal</div><div>{formatMoney(subTotal, invoice.currency)}</div></div>
-                <div className="flex justify-between text-sm py-1 kv"><div>Discount</div><div>{formatMoney(num(invoice.discount), invoice.currency)}</div></div>
-                <div className="flex justify-between text-sm py-1 kv"><div>VAT ({num(invoice.taxRate)}%)</div><div>{formatMoney(vat, invoice.currency)}</div></div>
-                <div className="flex justify-between text-sm py-1 kv"><div>Shipping</div><div>{formatMoney(num(invoice.shipping), invoice.currency)}</div></div>
+            <div className="justify-self-end w-full max-w-[320px]">
+              <div className="rounded-lg border border-neutral-200 p-4">
+                <div className="flex justify-between text-sm py-1"><div>Subtotal</div><div>{formatMoney(subTotal, invoice.currency)}</div></div>
+                <div className="flex justify-between text-sm py-1"><div>Discount</div><div>{formatMoney(num(invoice.discount), invoice.currency)}</div></div>
+                <div className="flex justify-between text-sm py-1"><div>VAT ({num(invoice.taxRate)}%)</div><div>{formatMoney(vat, invoice.currency)}</div></div>
+                <div className="flex justify-between text-sm py-1"><div>Shipping</div><div>{formatMoney(num(invoice.shipping), invoice.currency)}</div></div>
                 <div className="border-t mt-2 pt-2 flex justify-between font-semibold"><div>Total</div><div>{formatMoney(total, invoice.currency)}</div></div>
               </div>
             </div>
           </div>
 
           {/* ADDITIONAL + TERMS */}
-          <div className="mt-6 space-y-6">
-            <div className="text-sm whitespace-pre-wrap">{invoice.additionalDetails || " "}</div>
-            <div className="text-sm whitespace-pre-wrap text-center">{invoice.terms || " "}</div>
+          <div className="mt-6 grid grid-cols-1">
+            {invoice.additionalDetails ? (
+              <div className="text-sm whitespace-pre-wrap">{invoice.additionalDetails}</div>
+            ) : null}
+            {invoice.terms ? (
+              <div className="text-sm whitespace-pre-wrap text-center mt-4">{invoice.terms}</div>
+            ) : null}
           </div>
 
           {/* SALUTATION */}
@@ -161,9 +172,6 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
             Thank you for doing business with Lexvor Group Limited
           </div>
         </div>
-
-        {/* Footer (optional page number) */}
-        <div className="print-footer"><div>{invoice.companyName}</div><div className="pageno"></div></div>
       </div>
     );
   }
@@ -174,15 +182,12 @@ PrintInvoice.displayName = "PrintInvoice";
 export default function App() {
   const { dark, setDark } = useTheme();
 
-  // Currency
   const [currency, setCurrency] = useState<string>(() => (typeof window==="undefined" ? "GHS" : localStorage.getItem("__currency") || "GHS"));
   useEffect(()=>{ localStorage.setItem("__currency", currency); },[currency]);
 
-  // Profile
   const [profile, setProfile] = useState<CompanyProfile>(() => safeRead("__company_profile", DEFAULT_PROFILE));
   useEffect(()=>{ safeWrite("__company_profile", profile); },[profile]);
 
-  // Draft
   const [invoice, setInvoice] = useState<Invoice>(() => safeRead("__invoice_draft", newInvoiceFromProfile(DEFAULT_PROFILE, currency)));
   useEffect(()=>{
     setInvoice(inv => ({
@@ -197,28 +202,44 @@ export default function App() {
   }, [profile.logoUrl, profile.companyName, profile.companyEmail, profile.companyPhone, profile.companyAddress, profile.companyTin, currency]);
   useEffect(()=>{ safeWrite("__invoice_draft", invoice); },[invoice]);
 
-  // Local DB
   const [db, setDb] = useState<Invoice[]>(() => safeRead("__invoices_db", [] as Invoice[]));
   useEffect(()=>{ safeWrite("__invoices_db", db); },[db]);
 
-  // Tabs
   const [tab, setTab] = useState<"create"|"invoices">("create");
 
-  // Visible preview (used for desktop print & mobile capture)
+  // Visible preview used for both desktop print and mobile capture
   const visiblePreviewRef = useRef<HTMLDivElement>(null);
 
   // Desktop print (create page)
-  const handlePrintDraft = useReactToPrint({ contentRef: visiblePreviewRef, documentTitle: `Invoice_${invoice.invoiceNo}` });
+  const handlePrintDraft = useReactToPrint({
+    contentRef: visiblePreviewRef,
+    documentTitle: `Invoice_${invoice.invoiceNo}`,
+  });
 
   // Mobile?
   const isMobile = typeof navigator !== "undefined" && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-  // Mobile PDF (create page)
+  // Mobile PDF (create page) — renders from visible preview
   const exportPDFMobile = async () => {
     try {
       const el = visiblePreviewRef.current; if (!el) return;
       const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([ import("html2canvas"), import("jspdf") ]);
-      const canvas = await html2canvas(el, { scale:2, useCORS:true, backgroundColor:"#ffffff", logging:false, windowWidth: document.documentElement.scrollWidth });
+
+      // Force solid backgrounds during capture
+      const originalBG = el.style.backgroundColor;
+      el.style.backgroundColor = "#ffffff";
+
+      const canvas = await html2canvas(el, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        logging: false,
+        windowWidth: document.documentElement.scrollWidth,
+      });
+
+      // restore
+      el.style.backgroundColor = originalBG || "";
+
       const imgData = canvas.toDataURL("image/jpeg", 0.98);
       const pdf = new jsPDF({ orientation:"portrait", unit:"mm", format:"a4" });
       const pageWidth = 210, pageHeight = 297;
@@ -250,7 +271,7 @@ export default function App() {
 
   const exportPDF = () => { if (isMobile) exportPDFMobile(); else handlePrintDraft(); };
 
-  // Totals (on-screen)
+  // Totals
   const subTotal = useMemo(()=> invoice.items.reduce((s,i)=> s + num(i.qty)*num(i.rate), 0), [invoice.items]);
   const vat = useMemo(()=> subTotal * (num(invoice.taxRate)/100), [subTotal, invoice.taxRate]);
   const total = useMemo(()=> subTotal - num(invoice.discount) + vat + num(invoice.shipping), [subTotal, vat, invoice.discount, invoice.shipping]);
@@ -278,10 +299,7 @@ export default function App() {
     );
   }, [db, search]);
 
-  // Optional: smoke test Supabase (non-blocking)
-  useEffect(()=>{ (async()=>{ try{ const { error } = await supabase.from("invoices").select("*").limit(1); if(error) console.warn("Supabase test error:", error.message);}catch{}})(); },[]);
-
-  // === Per-row PDF export (Invoices tab) ===
+  // Per-row printing in Invoices tab
   const printRowRef = useRef<HTMLDivElement>(null);
   const [printInvoiceData, setPrintInvoiceData] = useState<Invoice | null>(null);
   const handlePrintRow = useReactToPrint({ contentRef: printRowRef, documentTitle: `Invoice_${printInvoiceData?.invoiceNo || "Invoice"}` });
@@ -290,7 +308,11 @@ export default function App() {
     if (!printRowRef.current) return;
     const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([ import("html2canvas"), import("jspdf") ]);
     const el = printRowRef.current;
+    const oldBG = el.style.backgroundColor;
+    el.style.backgroundColor = "#ffffff";
     const canvas = await html2canvas(el, { scale:2, useCORS:true, backgroundColor:"#ffffff", logging:false, windowWidth: document.documentElement.scrollWidth });
+    el.style.backgroundColor = oldBG || "";
+
     const imgData = canvas.toDataURL("image/jpeg", 0.98);
     const pdf = new jsPDF({ orientation:"portrait", unit:"mm", format:"a4" });
     const pageWidth=210, pageHeight=297, imgHeight=(canvas.height*pageWidth)/canvas.width;
@@ -336,7 +358,7 @@ export default function App() {
         </div>
       </div>
 
-        {/* Tabs */}
+      {/* Tabs */}
       <div className="max-w-6xl mx-auto p-4">
         <div className="mb-4 inline-flex rounded-xl overflow-hidden">
           <button onClick={()=>setTab("create")} aria-pressed={tab==="create"} className={`px-4 py-2 text-sm font-medium ${tab==="create" ? "tab-active":"tab-inactive"}`}>Create Invoice</button>
@@ -474,7 +496,7 @@ export default function App() {
               </div>
             </section>
 
-            {/* Preview used for printing */}
+            {/* Preview used for printing (web & mobile capture) */}
             <section className="card mt-6">
               <div className="card-h"><div className="card-t">Preview (A4, print-ready)</div></div>
               <div className="card-c">
