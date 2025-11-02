@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic';
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { supabase } from "../lib/supabaseClient"; // use "@/lib/..." if you configured alias
+import { supabase } from "../lib/supabaseClient";
 import { Plus, Trash2, Printer, Save, Upload, RefreshCcw, Sun, Moon, Eye, Trash, Search } from "lucide-react";
 import { useReactToPrint } from "react-to-print";
 
@@ -121,7 +121,7 @@ const useTheme = () => {
   return { dark, setDark };
 };
 
-/* =================== PDF component (polished) =================== */
+/* =================== PDF component (Excel-style layout) =================== */
 const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
   ({ invoice }, ref) => {
     const subTotal = invoice.items.reduce((sum, it) => sum + Number(it.qty || 0) * Number(it.rate || 0), 0);
@@ -132,7 +132,6 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
       <div ref={ref} className="print-area">
         <div className="print-inner">
 
-          {/* Optional watermark: add class .show-watermark to print-area to enable */}
           <div className="watermark">INVOICE</div>
 
           {/* HEADER */}
@@ -204,34 +203,37 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
             </table>
           </div>
 
-          {/* INFO TILES + TOTALS */}
+          {/* INFO + TOTALS (Excel-style) */}
           <div className="mt-6 space-y-6">
-            {/* Three equal tiles */}
-            <div className="grid grid-cols-3 gap-6 text-sm">
+            {/* Row 1: Bank (left) + Totals (right) */}
+            <div className="grid grid-cols-2 gap-6">
               <div className="tile avoid-break">
                 <div className="print-h2 mb-1">Bank Details</div>
-                <div className="whitespace-pre-wrap">{invoice.bankDetails || "—"}</div>
+                <div className="whitespace-pre-wrap text-sm">{invoice.bankDetails || "—"}</div>
               </div>
-              <div className="tile avoid-break">
-                <div className="print-h2 mb-1">Additional Details</div>
-                <div className="whitespace-pre-wrap">{invoice.additionalDetails || "—"}</div>
-              </div>
-              <div className="tile avoid-break">
-                <div className="print-h2 mb-1">Terms &amp; Conditions</div>
-                <div className="whitespace-pre-wrap">{invoice.terms || "—"}</div>
+
+              <div className="justify-self-end">
+                <div className="totals avoid-break">
+                  <div className="kv text-sm py-1"><div>Subtotal</div><div className="num">{formatMoney(subTotal, invoice.currency)}</div></div>
+                  <div className="kv text-sm py-1"><div>Discount</div><div className="num">{formatMoney(Number(invoice.discount || 0), invoice.currency)}</div></div>
+                  <div className="kv text-sm py-1"><div>VAT ({invoice.taxRate || 0}%)</div><div className="num">{formatMoney(vat, invoice.currency)}</div></div>
+                  <div className="kv text-sm py-1"><div>Shipping</div><div className="num">{formatMoney(Number(invoice.shipping || 0), invoice.currency)}</div></div>
+                  <div className="total kv text-base mt-2 pt-2"><div>Total</div><div className="num">{formatMoney(total, invoice.currency)}</div></div>
+                </div>
               </div>
             </div>
 
-            {/* Totals card */}
-            <div className="flex justify-end">
-              <div className="totals avoid-break">
-                <div className="kv text-sm py-1"><div>Subtotal</div><div className="num">{formatMoney(subTotal, invoice.currency)}</div></div>
-                <div className="kv text-sm py-1"><div>Discount</div><div className="num">{formatMoney(Number(invoice.discount || 0), invoice.currency)}</div></div>
-                <div className="kv text-sm py-1"><div>VAT ({invoice.taxRate || 0}%)</div><div className="num">{formatMoney(vat, invoice.currency)}</div></div>
-                <div className="kv text-sm py-1"><div>Shipping</div><div className="num">{formatMoney(Number(invoice.shipping || 0), invoice.currency)}</div></div>
-                <div className="total kv text-base mt-2 pt-2"><div>Total</div><div className="num">{formatMoney(total, invoice.currency)}</div></div>
+            {/* Row 2: full-width paragraphs below */}
+            {(invoice.additionalDetails || invoice.terms) && (
+              <div className="col-span-2 text-sm print-line">
+                {invoice.additionalDetails && (
+                  <div className="whitespace-pre-wrap mb-3">{invoice.additionalDetails}</div>
+                )}
+                {invoice.terms && (
+                  <div className="whitespace-pre-wrap">{invoice.terms}</div>
+                )}
               </div>
-            </div>
+            )}
           </div>
 
           {/* SALUTATION */}
@@ -240,7 +242,7 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
           </div>
         </div>
 
-        {/* Fixed footer (page numbers & company) */}
+        {/* Fixed footer */}
         <div className="print-footer">
           <div>{invoice.companyName}</div>
           <div className="pageno"></div>
@@ -251,7 +253,7 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
 );
 PrintInvoice.displayName = "PrintInvoice";
 
-/* =================== Main App (unchanged logic, premium font now applied) =================== */
+/* =================== Main App =================== */
 export default function App() {
   const { dark, setDark } = useTheme();
 
@@ -286,27 +288,21 @@ export default function App() {
   }, [profile.logoUrl, profile.companyName, profile.companyEmail, profile.companyPhone, profile.companyAddress, profile.companyTin, currency]);
   useEffect(() => { safeWrite("__invoice_draft", invoice); }, [invoice]);
 
-  // Remote DB list (hook up to Supabase later; still keeping local cache behavior if needed)
+  // Local DB (can swap to Supabase later)
   const [db, setDb] = useState<Invoice[]>(() => safeRead<Invoice[]>("__invoices_db", []));
   useEffect(() => { safeWrite("__invoices_db", db); }, [db]);
 
   // Tabs
   const [tab, setTab] = useState<"create" | "invoices">("create");
 
-  // Printing current draft (Create tab)
+  // Printing current draft
   const printRef = useRef<HTMLDivElement>(null);
-  const handlePrintDraft = useReactToPrint({
-    contentRef: printRef,
-    documentTitle: `Invoice_${invoice.invoiceNo}`
-  });
+  const handlePrintDraft = useReactToPrint({ contentRef: printRef, documentTitle: `Invoice_${invoice.invoiceNo}` });
 
-  // Printing from Invoices tab (select row → print that row)
+  // Printing saved row
   const printRowRef = useRef<HTMLDivElement>(null);
   const [printInvoiceData, setPrintInvoiceData] = useState<Invoice | null>(null);
-  const handlePrintRow = useReactToPrint({
-    contentRef: printRowRef,
-    documentTitle: `Invoice_${printInvoiceData?.invoiceNo || "Invoice"}`
-  });
+  const handlePrintRow = useReactToPrint({ contentRef: printRowRef, documentTitle: `Invoice_${printInvoiceData?.invoiceNo || "Invoice"}` });
 
   // Totals
   const subTotal = useMemo(
@@ -328,11 +324,7 @@ export default function App() {
   };
   const addItem = () => setInvoice((s) => ({ ...s, items: [...s.items, { description: "", qty: 1, rate: 0 }] }));
   const updateItem = (i: number, patch: Partial<Item>) =>
-    setInvoice((s) => {
-      const items = s.items.slice();
-      items[i] = { ...items[i], ...patch };
-      return { ...s, items };
-    });
+    setInvoice((s) => { const items = s.items.slice(); items[i] = { ...items[i], ...patch }; return { ...s, items }; });
   const removeItem = (i: number) => setInvoice((s) => ({ ...s, items: s.items.filter((_, k) => k !== i) }));
 
   const saveToDB = () => {
@@ -346,22 +338,17 @@ export default function App() {
   const viewToDraft = (invoiceNo: string) => {
     const src = db.find((r) => r.invoiceNo === invoiceNo);
     if (!src) return;
-    setInvoice({ ...src });
-    setTab("create");
-    window?.scrollTo?.({ top: 0, behavior: "smooth" });
+    setInvoice({ ...src }); setTab("create"); window?.scrollTo?.({ top: 0, behavior: "smooth" });
   };
   const exportRowToPDF = (invoiceNo: string) => {
-    const src = db.find((r) => r.invoiceNo === invoiceNo);
-    if (!src) return;
-    setPrintInvoiceData({ ...src });
-    setTimeout(() => { handlePrintRow(); }, 50);
+    const src = db.find((r) => r.invoiceNo === invoiceNo); if (!src) return;
+    setPrintInvoiceData({ ...src }); setTimeout(() => { handlePrintRow(); }, 50);
   };
 
-  // Invoices search & select
+  // Search
   const [search, setSearch] = useState("");
   const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return db;
+    const q = search.trim().toLowerCase(); if (!q) return db;
     return db.filter(r =>
       r.invoiceNo.toLowerCase().includes(q) ||
       r.clientName.toLowerCase().includes(q) ||
@@ -379,9 +366,7 @@ export default function App() {
         const { data, error } = await supabase.from("invoices").select("*").limit(1);
         if (error) console.error("❌ Supabase connection failed:", error.message);
         else console.log("✅ Supabase connected successfully! Sample:", data);
-      } catch (e) {
-        console.error(e);
-      }
+      } catch (e) { console.error(e); }
     };
     test();
   }, []);
@@ -393,12 +378,7 @@ export default function App() {
         <div className="max-w-6xl mx-auto px-4 py-3 flex flex-wrap gap-3 items-center justify-between">
           <div className="text-lg font-semibold">Invoice System</div>
           <div className="flex items-center gap-2">
-            <select
-              className="input w-[110px]"
-              value={invoice.currency}
-              onChange={(e) => setInvoice((prev) => ({ ...prev, currency: e.target.value }))}
-              title="Currency"
-            >
+            <select className="input w-[110px]" value={invoice.currency} onChange={(e) => setInvoice((p) => ({ ...p, currency: e.target.value }))} title="Currency">
               {["GHS","USD","EUR","GBP","NGN","ZAR","CAD","AUD"].map(c => <option key={c} value={c}>{c}</option>)}
             </select>
             <button className="btn btn-ghost-strong" onClick={() => setDark(!dark)} title="Toggle theme">
@@ -595,10 +575,10 @@ export default function App() {
               </div>
             </section>
 
-            {/* Editor-only: Hidden print area for draft */}
+            {/* Hidden print area for draft */}
             <div className="hidden"><div ref={printRef}><PrintInvoice invoice={invoice} /></div></div>
 
-            {/* Visible Preview (matches print) */}
+            {/* On-screen Preview */}
             <section className="card mt-6">
               <div className="card-h"><div className="card-t">Preview (A4, print-ready)</div></div>
               <div className="card-c">
@@ -619,25 +599,11 @@ export default function App() {
               <div className="flex items-center gap-2">
                 <div className="relative">
                   <Search className="h-4 w-4 absolute left-2 top-1/2 -translate-y-1/2 text-neutral-400" />
-                  <input
-                    className="input pl-8 w-64"
-                    placeholder="Search by #, client, status, date…"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                  />
+                  <input className="input pl-8 w-64" placeholder="Search by #, client, status, date…" value={search} onChange={(e) => setSearch(e.target.value)} />
                 </div>
-                <select
-                  className="input w-56"
-                  onChange={(e) => e.target.value && viewToDraft(e.target.value)}
-                  defaultValue=""
-                  title="Quick select invoice"
-                >
+                <select className="input w-56" onChange={(e) => e.target.value && viewToDraft(e.target.value)} defaultValue="" title="Quick select invoice">
                   <option value="" disabled>Quick select…</option>
-                  {filtered.slice(0, 20).map(r => (
-                    <option key={r.invoiceNo} value={r.invoiceNo}>
-                      {r.invoiceNo} — {r.clientName}
-                    </option>
-                  ))}
+                  {filtered.slice(0, 20).map(r => (<option key={r.invoiceNo} value={r.invoiceNo}>{r.invoiceNo} — {r.clientName}</option>))}
                 </select>
               </div>
             </div>
@@ -679,9 +645,7 @@ export default function App() {
                         </tr>
                       );
                     })}
-                    {filtered.length === 0 && (
-                      <tr><td colSpan={7} className="px-3 py-10 text-center text-neutral-500">No matches.</td></tr>
-                    )}
+                    {filtered.length === 0 && (<tr><td colSpan={7} className="px-3 py-10 text-center text-neutral-500">No matches.</td></tr>)}
                   </tbody>
                 </table>
               </div>
