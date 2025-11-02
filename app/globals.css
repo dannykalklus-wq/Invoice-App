@@ -6,31 +6,29 @@
 @tailwind utilities;
 
 /* =============================
-   Theme Colors & Base Styling
+   Base Theme
 ============================= */
 :root {
   --background: 0 0% 100%;
   --foreground: 240 10% 3.9%;
   --line: 240 5% 90%;
-  --text-muted: 240 5% 46%;
 }
 
 .dark {
   --background: 240 10% 3.9%;
   --foreground: 0 0% 98%;
   --line: 240 3.7% 15.9%;
-  --text-muted: 240 5% 65%;
 }
 
-body {
+html, body {
   @apply bg-[hsl(var(--background))] text-[hsl(var(--foreground))] antialiased;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 /* =============================
-   Reusable UI Elements
+   Controls
 ============================= */
-.input, .textarea, select {
+.input, .textarea, select.input {
   @apply w-full rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-sm text-neutral-900 dark:text-neutral-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500;
 }
 .textarea { resize: vertical; }
@@ -44,7 +42,7 @@ body {
 .label { @apply text-sm font-semibold mb-1 text-neutral-700 dark:text-neutral-300; }
 
 /* =============================
-   Card Layouts
+   Cards
 ============================= */
 .card { @apply bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm mb-4; }
 .card-h { @apply px-4 py-2 border-b border-neutral-200 dark:border-neutral-800; }
@@ -52,42 +50,18 @@ body {
 .card-c { @apply p-4; }
 
 /* =============================
-   Tabs (stable classes)
+   Tabs (stable)
 ============================= */
-.tab-inactive {
-  background-color: #f6f6f6;
-  color: #111;
-  border: 1px solid #e5e5e5;
-}
-.dark .tab-inactive {
-  background-color: #111;
-  color: #eaeaea;
-  border-color: #2a2a2a;
-}
-.tab-active {
-  background-color: #99b3d9;
-  color: #0b0b0b;
-  border: 1px solid transparent;
-}
+.tab-inactive { background:#f6f6f6; color:#111; border:1px solid #e5e5e5; }
+.dark .tab-inactive { background:#111; color:#eaeaea; border-color:#2a2a2a; }
+.tab-active { background:#99b3d9; color:#0b0b0b; border:1px solid transparent; }
 
 /* =============================
-   Topbar contrast (stable)
+   Topbar
 ============================= */
-.topbar .input,
-.topbar .btn,
-.topbar select.input {
-  border-color: #dcdcdc;
-  background-color: #fff;
-  color: #111;
-}
-.dark .topbar .input,
-.dark .topbar .btn,
-.dark .topbar select.input {
-  border-color: #2a2a2a !important;
-  background-color: #111 !important;
-  color: #eaeaea !important;
-}
-.dark .topbar-border { border-color: #2a2a2a !important; }
+.topbar .input, .topbar .btn, .topbar select.input { border-color:#dcdcdc; background:#fff; color:#111; }
+.dark .topbar .input, .dark .topbar .btn, .dark .topbar select.input { border-color:#2a2a2a !important; background:#111 !important; color:#eaeaea !important; }
+.dark .topbar-border { border-color:#2a2a2a !important; }
 
 /* =============================
    Tables
@@ -98,32 +72,21 @@ th, td { padding:8px 10px; border-bottom:1px solid hsl(var(--line)); }
 th { text-align:left; font-weight:600; background:hsl(var(--line) / 0.2); }
 
 /* =============================
-   Invoice / Print Area
+   Print Area (for on-screen preview)
 ============================= */
 .print-area { background:#ffffff; color:#000000; }
 .print-inner { margin:0 auto; }
 
-/* Mobile adjustments */
+/* Mobile preview adjustments (web only) */
 @media (max-width: 768px) {
-  .print-area { width:100%; max-width:100%; min-height:auto; border-radius:12px; background:#fff; color:#000; }
+  .print-area { width:100%; max-width:100%; border-radius:12px; }
   .print-inner { width:100%; max-width:100%; padding:16px; }
-  .print-h1 { font-size:20px; }
-  .company-title { font-size:22px; }
-  .table th, .table td { padding:6px 8px; }
   .meta .meta-label, .meta .meta-val { font-size:12px; }
-  .totals .kv { padding-top:6px; padding-bottom:6px; }
-}
-
-/* Print / PDF layout */
-@media print {
-  @page { size:A4; margin:16mm; }
-  html, body { background:#fff !important; }
-  .print-area { width:210mm !important; min-height:297mm !important; }
-  .print-inner { width:178mm !important; padding:0 !important; }
 }
 
 /* =============================
-   Premium Glass Look (scoped)
+   GLASS THEME (scoped to .use-glass)
+   — never applied in print
 ============================= */
 .use-glass {
   background:
@@ -160,33 +123,34 @@ th { text-align:left; font-weight:600; background:hsl(var(--line) / 0.2); }
   box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, 0 10px 28px rgba(0,0,0,0.35);
 }
 .use-glass .tab-active { background-color: rgba(153,179,217,0.8); color:#0b0b0b; border-color:transparent; }
-.use-glass .btn:hover { background-color: rgba(255,255,255,0.7); }
-.dark.use-glass .btn:hover { background-color: rgba(25,25,25,0.7); }
-.use-glass .input:focus,
-.use-glass .textarea:focus,
-.use-glass select.input:focus {
-  outline:none;
-  box-shadow: 0 0 0 2px rgba(153,179,217,0.75), 0 1px 0 rgba(255,255,255,0.25) inset;
-  border-color: rgba(153,179,217,0.65);
-}
-.use-glass .card { border-radius:16px; }
-.use-glass .print-area { background: rgba(255,255,255,0.85); border-radius:16px; border:1px solid rgba(0,0,0,0.06); }
 
-/* Accessibility */
-@media (prefers-reduced-transparency: reduce) {
-  .use-glass .glass,
-  .use-glass .card,
-  .use-glass .topbar,
-  .use-glass .tab-inactive,
-  .use-glass .tab-active,
-  .use-glass .btn,
-  .use-glass .input,
-  .use-glass .textarea,
-  .use-glass select.input {
-    background-color: var(--background);
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
+/* =============================
+   HARD PRINT RESET — prevents “spoilt” PDFs
+   Kills blur, transparency, shadows, dark colors, forces A4 sizes.
+============================= */
+@media print {
+  @page { size: A4; margin: 16mm; }
+  html, body { background:#fff !important; color:#000 !important; }
+
+  /* kill all glass effects */
+  .use-glass, .use-glass * {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: none !important;
+    filter: none !important;
   }
+
+  /* printable sheet */
+  .print-area { width:210mm !important; min-height:297mm !important; background:#fff !important; border:none !important; }
+  .print-inner { width:178mm !important; padding:0 !important; }
+
+  /* default text color */
+  .print-area, .print-area * { color:#000 !important; }
+
+  /* tables & borders crisp */
+  table, th, td { border-color:#ddd !important; }
 }
-/* Ensure images (logo) don’t overflow */
+
+/* media safety */
 img, svg, video { max-width:100%; height:auto; }
