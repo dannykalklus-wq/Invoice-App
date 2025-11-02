@@ -111,33 +111,42 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
               </div>
             </div>
 
-            {/* Meta tiles — add a top margin equal to the “Bill To” label height so
-                their first tile top border sits on the same line as the Bill To box top */}
-            <div className="col-span-6 h-full" style={{ marginTop: billToLabelHeight + 4 /* label + 4px gap */ }}>
-              <div className="grid grid-rows-3 h-full">
-                {[
-                  ["Invoice No", invoice.invoiceNo || "-"],
-                  ["Invoice Date", invoice.invoiceDate || "-"],
-                  ["Due Date", invoice.dueDate || "-"],
-                ].map(([label, val], i) => (
-                  <div key={i} className="grid grid-cols-12">
-                    <div
-                      className="col-span-4 text-[9pt] font-semibold px-2 py-[6px] self-stretch flex items-center"
-                      style={{ background: headerGray, color: "#1a1a1a", border: `1px solid ${gridGray}`, borderRightColor: gridGray, borderTopLeftRadius: i===0?4:0, borderBottomLeftRadius: i===2?4:0 }}
-                    >
-                      {label}
-                    </div>
-                    <div
-                      className="col-span-8 text-[9pt] px-2 py-[6px] self-stretch flex items-center"
-                      style={{ border: `1px solid ${gridGray}`, borderLeftColor: gridGray, background:"#fff", borderTopRightRadius: i===0?4:0, borderBottomRightRadius: i===2?4:0 }}
-                    >
-                      {val}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+            // META tiles container — shrink to content height and align with Bill To
+<div className="col-span-6 self-start" style={{ marginTop: billToLabelHeight + 4 }}>
+  <div className="grid grid-rows-3">
+    {[
+      ["Invoice No", invoice.invoiceNo || "-"],
+      ["Invoice Date", invoice.invoiceDate || "-"],
+      ["Due Date",    invoice.dueDate    || "-"],
+    ].map(([label, val], i) => (
+      <div key={i} className="grid grid-cols-12">
+        <div
+          className="col-span-4 text-[9pt] font-semibold px-2 py-[5px] flex items-center"
+          style={{
+            background: headerGray,
+            color: "#1a1a1a",
+            border: `1px solid ${gridGray}`,
+            borderTopLeftRadius: i === 0 ? 4 : 0,
+            borderBottomLeftRadius: i === 2 ? 4 : 0,
+          }}
+        >
+          {label}
+        </div>
+        <div
+          className="col-span-8 text-[9pt] px-2 py-[5px] flex items-center"
+          style={{
+            background: "#fff",
+            border: `1px solid ${gridGray}`,
+            borderTopRightRadius: i === 0 ? 4 : 0,
+            borderBottomRightRadius: i === 2 ? 4 : 0,
+          }}
+        >
+          {val}
+        </div>
+      </div>
+    ))}
+  </div>
+</div>
 
           {/* ITEMS TABLE (consistent gray) */}
           <div className="mt-4 rounded border" style={{ borderColor: gridGray }}>
