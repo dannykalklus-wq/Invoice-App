@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic';
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { supabase } from "../lib/supabaseClient"; // relative path (no "@/")
+import { supabase } from "../lib/supabaseClient"; // relative path
 import {
   Plus, Trash2, Printer, Save, Upload, RefreshCcw,
   Sun, Moon, Eye, Trash, Search
@@ -53,6 +53,12 @@ type Invoice = {
 
   paymentStatus: PaymentStatus;
   currency: string;
+};
+
+/* ============ Helpers (mobile-safe number parsing) ============ */
+const num = (v: any) => {
+  const n = typeof v === "number" ? v : parseFloat(String(v).replace(/,/g, ""));
+  return Number.isFinite(n) ? n : 0;
 };
 
 /* ============ Safe localStorage helpers ============ */
@@ -113,7 +119,7 @@ const newInvoiceFromProfile = (p: CompanyProfile, currency = "GHS"): Invoice => 
 
 /* =================== Theme & money =================== */
 const formatMoney = (n: number, currency: string) =>
-  new Intl.NumberFormat(undefined, { style: "currency", currency }).format(Number(n || 0));
+  new Intl.NumberFormat(undefined, { style: "currency", currency }).format(num(n));
 
 const useTheme = () => {
   const [dark, setDark] = useState<boolean>(() => {
@@ -132,17 +138,16 @@ const useTheme = () => {
 /* =================== PDF component (Excel-style header) =================== */
 const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
   ({ invoice }, ref) => {
-    const subTotal = invoice.items.reduce((sum, it) => sum + Number(it.qty || 0) * Number(it.rate || 0), 0);
-    const vat = subTotal * (Number(invoice.taxRate || 0) / 100);
-    const total = subTotal - Number(invoice.discount || 0) + vat + Number(invoice.shipping || 0);
+    const subTotal = invoice.items.reduce((sum, it) => sum + num(it.qty) * num(it.rate), 0);
+    const vat = subTotal * (num(invoice.taxRate) / 100);
+    const total = subTotal - num(invoice.discount) + vat + num(invoice.shipping);
 
     return (
       <div ref={ref} className="print-area bg-white text-black">
         <div className="print-inner py-6">
 
-          {/* HEADER — Excel-style layout (matches your screenshot) */}
-          <div className="pt-2 grid grid-cols-2 gap-6 items-start">
-
+          {/* HEADER — Excel-style layout */}
+          <div className="pt-2 grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
             {/* LEFT: Company details */}
             <div className="print-line">
               <div className="company-title">{invoice.companyName || "Company Name"}</div>
@@ -160,7 +165,7 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
               )}
             </div>
 
-            {/* RIGHT: Invoice title + logo under it */}
+            {/* RIGHT: Invoice title + logo */}
             <div className="text-right">
               <div className="print-h1">INVOICE</div>
               <div className="mt-6 inline-block">
@@ -179,8 +184,8 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
             </div>
           </div>
 
-          {/* SECOND ROW: Bill To (left) + Blue meta table (right) */}
-          <div className="mt-4 grid grid-cols-2 gap-6 items-start">
+          {/* SECOND ROW: Bill To + Meta table */}
+          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
             {/* Bill To */}
             <div>
               <div className="print-h2">Bill To</div>
@@ -230,18 +235,17 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
                 {invoice.items.map((it, i) => (
                   <tr className="avoid-break" key={i}>
                     <td className="wrap">{it.description}</td>
-                    <td className="num">{Number(it.qty || 0)}</td>
-                    <td className="num">{formatMoney(Number(it.rate || 0), invoice.currency)}</td>
-                    <td className="num">{formatMoney(Number(it.qty || 0) * Number(it.rate || 0), invoice.currency)}</td>
+                    <td className="num">{num(it.qty)}</td>
+                    <td className="num">{formatMoney(num(it.rate), invoice.currency)}</td>
+                    <td className="num">{formatMoney(num(it.qty) * num(it.rate), invoice.currency)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
 
-          {/* BANK DETAILS (left) + TOTALS (right) */}
-          <div className="mt-6 grid grid-cols-2 gap-6">
-            {/* Bank tile ALWAYS visible so you see it in preview too */}
+          {/* BANK + TOTALS */}
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="tile avoid-break">
               <div className="print-h2 mb-1">Bank Details</div>
               <div className="whitespace-pre-wrap text-sm">
@@ -257,15 +261,15 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
                 </div>
                 <div className="kv text-sm py-1">
                   <div>Discount</div>
-                  <div className="num">{formatMoney(Number(invoice.discount || 0), invoice.currency)}</div>
+                  <div className="num">{formatMoney(num(invoice.discount), invoice.currency)}</div>
                 </div>
                 <div className="kv text-sm py-1">
-                  <div>VAT ({invoice.taxRate || 0}%)</div>
+                  <div>VAT ({num(invoice.taxRate)}%)</div>
                   <div className="num">{formatMoney(vat, invoice.currency)}</div>
                 </div>
                 <div className="kv text-sm py-1">
                   <div>Shipping</div>
-                  <div className="num">{formatMoney(Number(invoice.shipping || 0), invoice.currency)}</div>
+                  <div className="num">{formatMoney(num(invoice.shipping), invoice.currency)}</div>
                 </div>
                 <div className="total kv text-base mt-2 pt-2">
                   <div>Total</div>
@@ -275,7 +279,7 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
             </div>
           </div>
 
-          {/* ADDITIONAL + TERMS — ALWAYS render; Terms centered per your request */}
+          {/* ADDITIONAL + TERMS */}
           <div className="mt-6 space-y-6">
             <div className="text-sm print-line whitespace-pre-wrap">
               {invoice.additionalDetails || " "}
@@ -285,13 +289,13 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
             </div>
           </div>
 
-          {/* SALUTATION — bold + well centered */}
+          {/* SALUTATION — bold + centered */}
           <div className="mt-10 text-center text-sm font-bold">
             Thank you for doing business with Lexvor Group Limited
           </div>
         </div>
 
-        {/* Fixed footer (optional) */}
+        {/* Fixed footer */}
         <div className="print-footer">
           <div>{invoice.companyName}</div>
           <div className="pageno"></div>
@@ -340,36 +344,105 @@ export default function App() {
   ]);
   useEffect(() => { safeWrite("__invoice_draft", invoice); }, [invoice]);
 
-  // Local DB (stored in localStorage for now)
+  // Local DB
   const [db, setDb] = useState<Invoice[]>(() => safeRead<Invoice[]>("__invoices_db", []));
   useEffect(() => { safeWrite("__invoices_db", db); }, [db]);
 
   // Tabs
   const [tab, setTab] = useState<"create" | "invoices">("create");
 
-  // Print current draft
-  const printRef = useRef<HTMLDivElement>(null);
+  // --- PRINT / PDF (Desktop vs Mobile) ---
+  // Visible preview ref (works for both print and PDF capture)
+  const visiblePreviewRef = useRef<HTMLDivElement>(null);
+
+  // Desktop print
   const handlePrintDraft = useReactToPrint({
-    contentRef: printRef,
+    contentRef: visiblePreviewRef,
     documentTitle: `Invoice_${invoice.invoiceNo}`
   });
 
-  // Print selected from list
-  const printRowRef = useRef<HTMLDivElement>(null);
-  const [printInvoiceData, setPrintInvoiceData] = useState<Invoice | null>(null);
-  const handlePrintRow = useReactToPrint({
-    contentRef: printRowRef,
-    documentTitle: `Invoice_${printInvoiceData?.invoiceNo || "Invoice"}`
-  });
+  // Mobile detection
+  const isMobile = typeof navigator !== "undefined" && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-  // Totals (for on-screen card)
+  // Mobile PDF export using html2canvas + jsPDF
+  const exportPDFMobile = async () => {
+    try {
+      const el = visiblePreviewRef.current;
+      if (!el) return;
+
+      const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+        import("html2canvas"),
+        import("jspdf"),
+      ]);
+
+      // Render the visible A4 area at high scale for crisp text
+      const canvas = await html2canvas(el, {
+        scale: 2,            // increase for quality
+        useCORS: true,       // allow logo base64/cors
+        backgroundColor: "#ffffff",
+        logging: false,
+        windowWidth: document.documentElement.scrollWidth,
+      });
+
+      const imgData = canvas.toDataURL("image/jpeg", 0.98);
+      // A4 in jsPDF is 210 x 297 mm -> default unit is "mm"
+      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+
+      const pageWidth = 210;
+      const pageHeight = 297;
+
+      // Fit image to page width, keep aspect ratio
+      const imgProps = { width: pageWidth, height: (canvas.height * pageWidth) / canvas.width };
+      let y = 0;
+
+      // If content height exceeds one page, paginate
+      if (imgProps.height <= pageHeight) {
+        pdf.addImage(imgData, "JPEG", 0, 0, imgProps.width, imgProps.height);
+      } else {
+        // slice into multiple pages
+        const onePageHeightPx = (canvas.width * pageHeight) / pageWidth; // px that fits one page at this scale
+        let sY = 0;
+        while (sY < canvas.height) {
+          const pageCanvas = document.createElement("canvas");
+          pageCanvas.width = canvas.width;
+          pageCanvas.height = Math.min(onePageHeightPx, canvas.height - sY);
+
+          const ctx = pageCanvas.getContext("2d");
+          if (!ctx) break;
+          ctx.drawImage(canvas, 0, sY, canvas.width, pageCanvas.height, 0, 0, canvas.width, pageCanvas.height);
+
+          const pageData = pageCanvas.toDataURL("image/jpeg", 0.98);
+          if (y === 0) {
+            pdf.addImage(pageData, "JPEG", 0, 0, pageWidth, pageHeight);
+          } else {
+            pdf.addPage();
+            pdf.addImage(pageData, "JPEG", 0, 0, pageWidth, pageHeight);
+          }
+          sY += pageCanvas.height;
+          y += pageHeight;
+        }
+      }
+
+      pdf.save(`Invoice_${invoice.invoiceNo || "Invoice"}.pdf`);
+    } catch (e) {
+      console.error("Mobile PDF export failed:", e);
+      alert("Could not generate PDF on this device. Please try desktop export.");
+    }
+  };
+
+  const exportPDF = () => {
+    if (isMobile) exportPDFMobile();
+    else handlePrintDraft();
+  };
+
+  // Totals (on-screen)
   const subTotal = useMemo(
-    () => invoice.items.reduce((sum, it) => sum + Number(it.qty || 0) * Number(it.rate || 0), 0),
+    () => invoice.items.reduce((sum, it) => sum + num(it.qty) * num(it.rate), 0),
     [invoice.items]
   );
-  const vat = useMemo(() => subTotal * (Number(invoice.taxRate || 0) / 100), [subTotal, invoice.taxRate]);
+  const vat = useMemo(() => subTotal * (num(invoice.taxRate) / 100), [subTotal, invoice.taxRate]);
   const total = useMemo(
-    () => subTotal - Number(invoice.discount || 0) + vat + Number(invoice.shipping || 0),
+    () => subTotal - num(invoice.discount) + vat + num(invoice.shipping),
     [subTotal, vat, invoice.discount, invoice.shipping]
   );
 
@@ -403,12 +476,6 @@ export default function App() {
     setInvoice({ ...src });
     setTab("create");
     window?.scrollTo?.({ top: 0, behavior: "smooth" });
-  };
-  const exportRowToPDF = (invoiceNo: string) => {
-    const src = db.find((r) => r.invoiceNo === invoiceNo);
-    if (!src) return;
-    setPrintInvoiceData({ ...src });
-    setTimeout(() => { handlePrintRow(); }, 50);
   };
 
   // List filtering
@@ -481,7 +548,7 @@ export default function App() {
           <>
             {/* Actions */}
             <div className="flex flex-wrap gap-2 mb-4">
-              <button className="btn-primary" onClick={handlePrintDraft}>
+              <button className="btn btn-primary" onClick={exportPDF}>
                 <Printer className="h-4 w-4 mr-2" /> Export to PDF
               </button>
               <button className="btn" onClick={saveToDB}>
@@ -583,8 +650,8 @@ export default function App() {
             <section className="card mb-6">
               <div className="card-h"><div className="card-t">Items</div></div>
               <div className="card-c">
-                <div className="overflow-hidden rounded-lg border border-line dark:border-neutral-800">
-                  <table className="w-full text-sm">
+                <div className="table-wrap rounded-lg border border-line dark:border-neutral-800">
+                  <table className="w-full text-sm min-w-[720px]">
                     <thead className="bg-neutral-100 dark:bg-neutral-800/60 text-left">
                       <tr>
                         <th className="px-3 py-2">Description</th>
@@ -598,19 +665,31 @@ export default function App() {
                       {invoice.items.map((it, i) => (
                         <tr key={i} className="border-t border-line dark:border-neutral-800">
                           <td className="px-3 py-2">
-                            <input className="input" placeholder="Item / service" value={it.description}
-                              onChange={(e) => updateItem(i, { description: e.target.value })} />
+                            <input
+                              className="input"
+                              placeholder="Item / service"
+                              value={it.description}
+                              onChange={(e) => updateItem(i, { description: e.target.value })}
+                            />
                           </td>
                           <td className="px-3 py-2">
-                            <input className="input text-right font-mono" type="number" min={0} value={it.qty}
-                              onChange={(e) => updateItem(i, { qty: Number(e.target.value) })} />
+                            <input
+                              className="input text-right font-mono"
+                              type="number" inputMode="decimal"
+                              value={it.qty}
+                              onChange={(e) => updateItem(i, { qty: num(e.target.value) })}
+                            />
                           </td>
                           <td className="px-3 py-2">
-                            <input className="input text-right font-mono" type="number" step="0.01" value={it.rate}
-                              onChange={(e) => updateItem(i, { rate: Number(e.target.value) })} />
+                            <input
+                              className="input text-right font-mono"
+                              type="number" inputMode="decimal"
+                              value={it.rate}
+                              onChange={(e) => updateItem(i, { rate: num(e.target.value) })}
+                            />
                           </td>
                           <td className="px-3 py-2 text-right align-middle font-mono">
-                            {formatMoney(Number(it.qty || 0) * Number(it.rate || 0), invoice.currency)}
+                            {formatMoney(num(it.qty) * num(it.rate), invoice.currency)}
                           </td>
                           <td className="px-3 py-2 text-right">
                             <button className="btn-sm btn-ghost-strong" onClick={() => removeItem(i)}><Trash2 className="h-4 w-4" /></button>
@@ -631,8 +710,12 @@ export default function App() {
                     <div className="flex items-center justify-between text-sm py-1 gap-2">
                       <div className="flex items-center gap-2">
                         <span className="label !mb-0">VAT %</span>
-                        <input className="input w-24 font-mono" type="number" step="0.01" value={invoice.taxRate}
-                          onChange={(e) => setInvoice({ ...invoice, taxRate: Number(e.target.value) })} />
+                        <input
+                          className="input w-24 font-mono"
+                          type="number" inputMode="decimal"
+                          value={invoice.taxRate}
+                          onChange={(e) => setInvoice({ ...invoice, taxRate: num(e.target.value) })}
+                        />
                       </div>
                       <div className="font-mono">{formatMoney(vat, invoice.currency)}</div>
                     </div>
@@ -640,19 +723,27 @@ export default function App() {
                     <div className="flex items-center justify-between text-sm py-1 gap-2">
                       <div className="flex items-center gap-2">
                         <span className="label !mb-0">Discount</span>
-                        <input className="input w-28 font-mono" type="number" step="0.01" value={invoice.discount}
-                          onChange={(e) => setInvoice({ ...invoice, discount: Number(e.target.value) })} />
+                        <input
+                          className="input w-28 font-mono"
+                          type="number" inputMode="decimal"
+                          value={invoice.discount}
+                          onChange={(e) => setInvoice({ ...invoice, discount: num(e.target.value) })}
+                        />
                       </div>
-                      <div className="font-mono">{formatMoney(Number(invoice.discount || 0), invoice.currency)}</div>
+                      <div className="font-mono">{formatMoney(num(invoice.discount), invoice.currency)}</div>
                     </div>
 
                     <div className="flex items-center justify-between text-sm py-1 gap-2">
                       <div className="flex items-center gap-2">
                         <span className="label !mb-0">Shipping</span>
-                        <input className="input w-28 font-mono" type="number" step="0.01" value={invoice.shipping}
-                          onChange={(e) => setInvoice({ ...invoice, shipping: Number(e.target.value) })} />
+                        <input
+                          className="input w-28 font-mono"
+                          type="number" inputMode="decimal"
+                          value={invoice.shipping}
+                          onChange={(e) => setInvoice({ ...invoice, shipping: num(e.target.value) })}
+                        />
                       </div>
-                      <div className="font-mono">{formatMoney(Number(invoice.shipping || 0), invoice.currency)}</div>
+                      <div className="font-mono">{formatMoney(num(invoice.shipping), invoice.currency)}</div>
                     </div>
 
                     <div className="border-t mt-2 pt-2 flex justify-between font-semibold">
@@ -685,17 +776,12 @@ export default function App() {
               </div>
             </section>
 
-            {/* Hidden print area for draft */}
-            <div className="hidden">
-              <div ref={printRef}><PrintInvoice invoice={invoice} /></div>
-            </div>
-
-            {/* On-screen Preview (A4) — shows Bank/Additional/Terms now too */}
+            {/* On-screen Preview (A4, and used for PDF export on mobile) */}
             <section className="card mt-6">
               <div className="card-h"><div className="card-t">Preview (A4, print-ready)</div></div>
               <div className="card-c">
-                <div className="print-area mx-auto shadow-sm">
-                  <div className="print-inner mx-auto">
+                <div className="screen-preview print-area mx-auto shadow-sm">
+                  <div className="print-inner mx-auto" ref={visiblePreviewRef}>
                     <PrintInvoice invoice={invoice} />
                   </div>
                 </div>
@@ -752,9 +838,9 @@ export default function App() {
                   </thead>
                   <tbody>
                     {filtered.map((r) => {
-                      const sub = r.items.reduce((s, i) => s + Number(i.qty || 0) * Number(i.rate || 0), 0);
-                      const v = sub * (Number(r.taxRate || 0) / 100);
-                      const t = sub - Number(r.discount || 0) + v + Number(r.shipping || 0);
+                      const sub = r.items.reduce((s, i) => s + num(i.qty) * num(i.rate), 0);
+                      const v = sub * (num(r.taxRate) / 100);
+                      const t = sub - num(r.discount) + v + num(r.shipping);
                       return (
                         <tr key={r.invoiceNo} className="border-t border-line dark:border-neutral-800">
                           <td className="px-3 py-2 font-mono">{r.invoiceNo}</td>
@@ -766,7 +852,6 @@ export default function App() {
                           <td className="px-3 py-2 text-right">
                             <div className="flex justify-end gap-2">
                               <button className="btn-sm btn-ghost-strong" title="View/Edit" onClick={() => viewToDraft(r.invoiceNo)}><Eye className="h-4 w-4" /></button>
-                              <button className="btn-sm btn-primary" title="Export PDF" onClick={() => exportRowToPDF(r.invoiceNo)}><Printer className="h-4 w-4" /></button>
                               <button className="btn-sm btn-danger" title="Delete" onClick={() => deleteFromDB(r.invoiceNo)}><Trash className="h-4 w-4" /></button>
                             </div>
                           </td>
@@ -779,11 +864,6 @@ export default function App() {
                   </tbody>
                 </table>
               </div>
-            </div>
-
-            {/* Hidden print area for selected row */}
-            <div className="hidden">
-              <div ref={printRowRef}>{printInvoiceData && <PrintInvoice invoice={printInvoiceData} />}</div>
             </div>
           </section>
         )}
