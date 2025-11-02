@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic';
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { supabase } from "../lib/supabaseClient"; // relative path
+import { supabase } from "../lib/supabaseClient";
 import {
   Plus, Trash2, Printer, Save, Upload, RefreshCcw,
   Sun, Moon, Eye, Trash, Search
@@ -149,10 +149,10 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
           {/* HEADER — Excel-style layout */}
           <div className="pt-2 grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
             {/* LEFT: Company details */}
-            <div className="print-line">
-              <div className="company-title">{invoice.companyName || "Company Name"}</div>
+            <div>
+              <div className="company-title font-bold text-2xl">{invoice.companyName || "Company Name"}</div>
               {invoice.companyTin && (
-                <div className="text-sm soft-underline mt-1">TIN: {invoice.companyTin}</div>
+                <div className="text-sm mt-1">TIN: {invoice.companyTin}</div>
               )}
               {invoice.companyAddress && (
                 <div className="text-sm mt-1 whitespace-pre-wrap">{invoice.companyAddress}</div>
@@ -167,7 +167,7 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
 
             {/* RIGHT: Invoice title + logo */}
             <div className="text-right">
-              <div className="print-h1">INVOICE</div>
+              <div className="print-h1 text-2xl font-bold tracking-tight">INVOICE</div>
               <div className="mt-6 inline-block">
                 {invoice.logoUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -188,8 +188,8 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
           <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
             {/* Bill To */}
             <div>
-              <div className="print-h2">Bill To</div>
-              <div className="mt-1 text-sm print-line">
+              <div className="uppercase text-sm font-semibold text-neutral-600">BILL TO</div>
+              <div className="mt-1 text-sm">
                 {invoice.clientName && <div className="font-medium">{invoice.clientName}</div>}
                 {invoice.clientAddress && <div className="whitespace-pre-wrap">{invoice.clientAddress}</div>}
                 {invoice.clientEmail && <div className="mt-1">{invoice.clientEmail}</div>}
@@ -199,45 +199,45 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
 
             {/* Right: Meta table (Excel blue #99b3d9) */}
             <div className="meta">
-              <div className="meta-row">
-                <div className="meta-label">Invoice No</div>
-                <div className="meta-val">{invoice.invoiceNo || "-"}</div>
+              <div className="flex">
+                <div className="w-40 bg-[#99b3d9] text-neutral-900 font-semibold px-3 py-2 text-sm rounded-l">Invoice No</div>
+                <div className="flex-1 border border-neutral-200 px-3 py-2 text-sm rounded-r">{invoice.invoiceNo || "-"}</div>
               </div>
-              <div className="meta-row">
-                <div className="meta-label">Invoice Date</div>
-                <div className="meta-val">{invoice.invoiceDate || "-"}</div>
+              <div className="flex mt-1">
+                <div className="w-40 bg-[#99b3d9] text-neutral-900 font-semibold px-3 py-2 text-sm rounded-l">Invoice Date</div>
+                <div className="flex-1 border border-neutral-200 px-3 py-2 text-sm rounded-r">{invoice.invoiceDate || "-"}</div>
               </div>
-              <div className="meta-row">
-                <div className="meta-label">Due Date</div>
-                <div className="meta-val">{invoice.dueDate || "-"}</div>
+              <div className="flex mt-1">
+                <div className="w-40 bg-[#99b3d9] text-neutral-900 font-semibold px-3 py-2 text-sm rounded-l">Due Date</div>
+                <div className="flex-1 border border-neutral-200 px-3 py-2 text-sm rounded-r">{invoice.dueDate || "-"}</div>
               </div>
             </div>
           </div>
 
           {/* ITEMS TABLE */}
-          <div className="mt-6 overflow-hidden rounded border border-line">
+          <div className="mt-6 overflow-hidden rounded border border-neutral-200">
             <table className="table text-sm">
               <colgroup>
-                <col className="col-desc" />
-                <col className="col-qty" />
-                <col className="col-rate" />
-                <col className="col-amt" />
+                <col />
+                <col style={{ width: "80px" }} />
+                <col style={{ width: "120px" }} />
+                <col style={{ width: "140px" }} />
               </colgroup>
-              <thead>
+              <thead className="bg-neutral-100">
                 <tr>
                   <th className="text-left">Description</th>
-                  <th className="num">Qty</th>
-                  <th className="num">Rate</th>
-                  <th className="num">Amount</th>
+                  <th className="text-right">Qty</th>
+                  <th className="text-right">Rate</th>
+                  <th className="text-right">Amount</th>
                 </tr>
               </thead>
               <tbody>
                 {invoice.items.map((it, i) => (
                   <tr className="avoid-break" key={i}>
-                    <td className="wrap">{it.description}</td>
-                    <td className="num">{num(it.qty)}</td>
-                    <td className="num">{formatMoney(num(it.rate), invoice.currency)}</td>
-                    <td className="num">{formatMoney(num(it.qty) * num(it.rate), invoice.currency)}</td>
+                    <td className="whitespace-pre-wrap">{it.description}</td>
+                    <td className="text-right">{num(it.qty)}</td>
+                    <td className="text-right">{formatMoney(num(it.rate), invoice.currency)}</td>
+                    <td className="text-right">{formatMoney(num(it.qty) * num(it.rate), invoice.currency)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -246,34 +246,21 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
 
           {/* BANK + TOTALS */}
           <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="tile avoid-break">
-              <div className="print-h2 mb-1">Bank Details</div>
-              <div className="whitespace-pre-wrap text-sm">
+            <div className="avoid-break rounded-lg border border-neutral-200 p-4">
+              <div className="text-sm font-semibold text-neutral-600">BANK DETAILS</div>
+              <div className="whitespace-pre-wrap text-sm mt-2">
                 {invoice.bankDetails || "—"}
               </div>
             </div>
 
-            <div className="justify-self-end">
-              <div className="totals avoid-break">
-                <div className="kv text-sm py-1">
-                  <div>Subtotal</div>
-                  <div className="num">{formatMoney(subTotal, invoice.currency)}</div>
-                </div>
-                <div className="kv text-sm py-1">
-                  <div>Discount</div>
-                  <div className="num">{formatMoney(num(invoice.discount), invoice.currency)}</div>
-                </div>
-                <div className="kv text-sm py-1">
-                  <div>VAT ({num(invoice.taxRate)}%)</div>
-                  <div className="num">{formatMoney(vat, invoice.currency)}</div>
-                </div>
-                <div className="kv text-sm py-1">
-                  <div>Shipping</div>
-                  <div className="num">{formatMoney(num(invoice.shipping), invoice.currency)}</div>
-                </div>
-                <div className="total kv text-base mt-2 pt-2">
-                  <div>Total</div>
-                  <div className="num">{formatMoney(total, invoice.currency)}</div>
+            <div className="justify-self-end w-full max-w-[280px] md:max-w-[320px]">
+              <div className="rounded-lg border border-neutral-200 p-4">
+                <div className="flex justify-between text-sm py-1"><div>Subtotal</div><div>{formatMoney(subTotal, invoice.currency)}</div></div>
+                <div className="flex justify-between text-sm py-1"><div>Discount</div><div>{formatMoney(num(invoice.discount), invoice.currency)}</div></div>
+                <div className="flex justify-between text-sm py-1"><div>VAT ({num(invoice.taxRate)}%)</div><div>{formatMoney(vat, invoice.currency)}</div></div>
+                <div className="flex justify-between text-sm py-1"><div>Shipping</div><div>{formatMoney(num(invoice.shipping), invoice.currency)}</div></div>
+                <div className="border-t mt-2 pt-2 flex justify-between font-semibold">
+                  <div>Total</div><div>{formatMoney(total, invoice.currency)}</div>
                 </div>
               </div>
             </div>
@@ -281,10 +268,10 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
 
           {/* ADDITIONAL + TERMS */}
           <div className="mt-6 space-y-6">
-            <div className="text-sm print-line whitespace-pre-wrap">
+            <div className="text-sm whitespace-pre-wrap">
               {invoice.additionalDetails || " "}
             </div>
-            <div className="text-sm print-line whitespace-pre-wrap text-center">
+            <div className="text-sm whitespace-pre-wrap text-center">
               {invoice.terms || " "}
             </div>
           </div>
@@ -352,7 +339,6 @@ export default function App() {
   const [tab, setTab] = useState<"create" | "invoices">("create");
 
   // --- PRINT / PDF (Desktop vs Mobile) ---
-  // Visible preview ref (works for both print and PDF capture)
   const visiblePreviewRef = useRef<HTMLDivElement>(null);
 
   // Desktop print
@@ -375,32 +361,27 @@ export default function App() {
         import("jspdf"),
       ]);
 
-      // Render the visible A4 area at high scale for crisp text
       const canvas = await html2canvas(el, {
-        scale: 2,            // increase for quality
-        useCORS: true,       // allow logo base64/cors
+        scale: 2,
+        useCORS: true,
         backgroundColor: "#ffffff",
         logging: false,
         windowWidth: document.documentElement.scrollWidth,
       });
 
       const imgData = canvas.toDataURL("image/jpeg", 0.98);
-      // A4 in jsPDF is 210 x 297 mm -> default unit is "mm"
       const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
 
       const pageWidth = 210;
       const pageHeight = 297;
 
-      // Fit image to page width, keep aspect ratio
       const imgProps = { width: pageWidth, height: (canvas.height * pageWidth) / canvas.width };
       let y = 0;
 
-      // If content height exceeds one page, paginate
       if (imgProps.height <= pageHeight) {
         pdf.addImage(imgData, "JPEG", 0, 0, imgProps.width, imgProps.height);
       } else {
-        // slice into multiple pages
-        const onePageHeightPx = (canvas.width * pageHeight) / pageWidth; // px that fits one page at this scale
+        const onePageHeightPx = (canvas.width * pageHeight) / pageWidth;
         let sY = 0;
         while (sY < canvas.height) {
           const pageCanvas = document.createElement("canvas");
@@ -492,15 +473,15 @@ export default function App() {
     );
   }, [db, search]);
 
-  // Optional: smoke test Supabase (won't break if envs missing)
+  // Optional: smoke test Supabase (non-blocking)
   useEffect(() => {
     (async () => {
       try {
         const { data, error } = await supabase.from("invoices").select("*").limit(1);
         if (error) console.warn("Supabase test error:", error.message);
         else console.log("Supabase sample:", data);
-      } catch (e) {
-        console.warn("Supabase unreachable (ok for local/no envs).");
+      } catch {
+        // ignore
       }
     })();
   }, []);
@@ -508,7 +489,7 @@ export default function App() {
   return (
     <main className="min-h-screen bg-neutral-50 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-50">
       {/* Top bar */}
-      <div className="sticky top-0 z-10 bg-white/90 dark:bg-neutral-900/90 backdrop-blur border-b border-line dark:border-neutral-800">
+      <div className="sticky top-0 z-10 bg-white/90 dark:bg-neutral-900/90 backdrop-blur border-b border-neutral-200 dark:border-neutral-800">
         <div className="max-w-6xl mx-auto px-4 py-3 flex flex-wrap gap-3 items-center justify-between">
           <div className="text-lg font-semibold">Invoice System</div>
           <div className="flex items-center gap-2">
@@ -650,8 +631,8 @@ export default function App() {
             <section className="card mb-6">
               <div className="card-h"><div className="card-t">Items</div></div>
               <div className="card-c">
-                <div className="table-wrap rounded-lg border border-line dark:border-neutral-800">
-                  <table className="w-full text-sm min-w-[720px]">
+                <div className="table-wrap rounded-lg border border-neutral-200 dark:border-neutral-800">
+                  <table className="w-full text-sm min-w-[560px]">
                     <thead className="bg-neutral-100 dark:bg-neutral-800/60 text-left">
                       <tr>
                         <th className="px-3 py-2">Description</th>
@@ -663,7 +644,7 @@ export default function App() {
                     </thead>
                     <tbody>
                       {invoice.items.map((it, i) => (
-                        <tr key={i} className="border-t border-line dark:border-neutral-800">
+                        <tr key={i} className="border-t border-neutral-200 dark:border-neutral-800">
                           <td className="px-3 py-2">
                             <input
                               className="input"
@@ -776,11 +757,11 @@ export default function App() {
               </div>
             </section>
 
-            {/* On-screen Preview (A4, and used for PDF export on mobile) */}
+            {/* On-screen Preview (A4, and used for mobile PDF export) */}
             <section className="card mt-6">
               <div className="card-h"><div className="card-t">Preview (A4, print-ready)</div></div>
               <div className="card-c">
-                <div className="screen-preview print-area mx-auto shadow-sm">
+                <div className="print-area mx-auto shadow-sm">
                   <div className="print-inner mx-auto" ref={visiblePreviewRef}>
                     <PrintInvoice invoice={invoice} />
                   </div>
@@ -823,7 +804,7 @@ export default function App() {
             </div>
 
             <div className="card-c">
-              <div className="overflow-hidden rounded-xl border border-line dark:border-neutral-800">
+              <div className="overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-800">
                 <table className="w-full text-sm">
                   <thead className="bg-neutral-100 dark:bg-neutral-800/60 text-left">
                     <tr>
@@ -842,7 +823,7 @@ export default function App() {
                       const v = sub * (num(r.taxRate) / 100);
                       const t = sub - num(r.discount) + v + num(r.shipping);
                       return (
-                        <tr key={r.invoiceNo} className="border-t border-line dark:border-neutral-800">
+                        <tr key={r.invoiceNo} className="border-t border-neutral-200 dark:border-neutral-800">
                           <td className="px-3 py-2 font-mono">{r.invoiceNo}</td>
                           <td className="px-3 py-2">{r.invoiceDate}</td>
                           <td className="px-3 py-2">{r.dueDate}</td>
