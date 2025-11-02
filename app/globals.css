@@ -33,173 +33,160 @@ body {
 .input, .textarea, select {
   @apply w-full rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-sm text-neutral-900 dark:text-neutral-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500;
 }
+.textarea { resize: vertical; }
 
-.btn {
-  @apply inline-flex items-center justify-center rounded-md border border-neutral-300 dark:border-neutral-700 px-3 py-2 text-sm font-medium transition-all hover:bg-neutral-100 dark:hover:bg-neutral-800;
-}
+.btn { @apply inline-flex items-center justify-center rounded-md border border-neutral-300 dark:border-neutral-700 px-3 py-2 text-sm font-medium transition-all hover:bg-neutral-100 dark:hover:bg-neutral-800; }
+.btn-primary { @apply bg-[#99b3d9] text-black hover:bg-[#89a5cc]; }
+.btn-danger { @apply bg-red-600 text-white hover:bg-red-500; }
+.btn-ghost-strong { @apply bg-transparent hover:bg-neutral-200 dark:hover:bg-neutral-800; }
+.btn-sm { @apply px-2 py-1 text-xs; }
 
-.btn-primary {
-  @apply bg-[#99b3d9] text-black hover:bg-[#89a5cc];
-}
-
-.btn-danger {
-  @apply bg-red-600 text-white hover:bg-red-500;
-}
-
-.btn-ghost-strong {
-  @apply bg-transparent hover:bg-neutral-200 dark:hover:bg-neutral-800;
-}
-
-.btn-sm {
-  @apply px-2 py-1 text-xs;
-}
-
-.label {
-  @apply text-sm font-semibold mb-1 text-neutral-700 dark:text-neutral-300;
-}
-
-.textarea {
-  resize: vertical;
-}
+.label { @apply text-sm font-semibold mb-1 text-neutral-700 dark:text-neutral-300; }
 
 /* =============================
    Card Layouts
 ============================= */
-.card {
-  @apply bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm mb-4;
+.card { @apply bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm mb-4; }
+.card-h { @apply px-4 py-2 border-b border-neutral-200 dark:border-neutral-800; }
+.card-t { @apply font-semibold text-neutral-800 dark:text-neutral-100; }
+.card-c { @apply p-4; }
+
+/* =============================
+   Tabs (stable classes)
+============================= */
+.tab-inactive {
+  background-color: #f6f6f6;
+  color: #111;
+  border: 1px solid #e5e5e5;
 }
-.card-h {
-  @apply px-4 py-2 border-b border-neutral-200 dark:border-neutral-800;
+.dark .tab-inactive {
+  background-color: #111;
+  color: #eaeaea;
+  border-color: #2a2a2a;
 }
-.card-t {
-  @apply font-semibold text-neutral-800 dark:text-neutral-100;
-}
-.card-c {
-  @apply p-4;
+.tab-active {
+  background-color: #99b3d9;
+  color: #0b0b0b;
+  border: 1px solid transparent;
 }
 
 /* =============================
-   Tabs
+   Topbar contrast (stable)
 ============================= */
-.tab-btn {
-  @apply px-4 py-2 font-medium text-sm bg-white dark:bg-neutral-900 hover:bg-neutral-100 dark:hover:bg-neutral-800;
+.topbar .input,
+.topbar .btn,
+.topbar select.input {
+  border-color: #dcdcdc;
+  background-color: #fff;
+  color: #111;
 }
-.tab-btn-active {
-  @apply bg-[#99b3d9] text-black;
+.dark .topbar .input,
+.dark .topbar .btn,
+.dark .topbar select.input {
+  border-color: #2a2a2a !important;
+  background-color: #111 !important;
+  color: #eaeaea !important;
 }
+.dark .topbar-border { border-color: #2a2a2a !important; }
 
 /* =============================
    Tables
 ============================= */
-.table-wrap {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-th, td {
-  padding: 8px 10px;
-  border-bottom: 1px solid hsl(var(--line));
-}
-th {
-  text-align: left;
-  font-weight: 600;
-  background: hsl(var(--line) / 0.2);
-}
+.table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+table { width:100%; border-collapse:collapse; }
+th, td { padding:8px 10px; border-bottom:1px solid hsl(var(--line)); }
+th { text-align:left; font-weight:600; background:hsl(var(--line) / 0.2); }
 
 /* =============================
    Invoice / Print Area
 ============================= */
-.print-area {
-  background: #ffffff;
-  color: #000000;
-}
-.print-inner {
-  margin: 0 auto;
-}
+.print-area { background:#ffffff; color:#000000; }
+.print-inner { margin:0 auto; }
 
 /* Mobile adjustments */
 @media (max-width: 768px) {
-  .print-area {
-    width: 100%;
-    max-width: 100%;
-    min-height: auto;
-    border-radius: 12px;
-    background: #fff;
-    color: #000;
-  }
-  .print-inner {
-    width: 100%;
-    max-width: 100%;
-    padding: 16px;
-  }
-
-  .print-h1 {
-    font-size: 20px;
-  }
-  .company-title {
-    font-size: 22px;
-  }
-  .table th,
-  .table td {
-    padding: 6px 8px;
-  }
-
-  .meta .meta-label {
-    font-size: 12px;
-  }
-  .meta .meta-val {
-    font-size: 12px;
-  }
-
-  .totals .kv {
-    padding-top: 6px;
-    padding-bottom: 6px;
-  }
+  .print-area { width:100%; max-width:100%; min-height:auto; border-radius:12px; background:#fff; color:#000; }
+  .print-inner { width:100%; max-width:100%; padding:16px; }
+  .print-h1 { font-size:20px; }
+  .company-title { font-size:22px; }
+  .table th, .table td { padding:6px 8px; }
+  .meta .meta-label, .meta .meta-val { font-size:12px; }
+  .totals .kv { padding-top:6px; padding-bottom:6px; }
 }
 
 /* Print / PDF layout */
 @media print {
-  @page {
-    size: A4;
-    margin: 16mm;
-  }
-  html, body {
-    background: #fff !important;
-  }
-  .print-area {
-    width: 210mm !important;
-    min-height: 297mm !important;
-  }
-  .print-inner {
-    width: 178mm !important;
-    padding: 0 !important;
-  }
+  @page { size:A4; margin:16mm; }
+  html, body { background:#fff !important; }
+  .print-area { width:210mm !important; min-height:297mm !important; }
+  .print-inner { width:178mm !important; padding:0 !important; }
 }
 
 /* =============================
-   Misc
+   Premium Glass Look (scoped)
 ============================= */
-img, svg, video {
-  max-width: 100%;
-  height: auto;
+.use-glass {
+  background:
+    radial-gradient(1200px 800px at 20% 0%, rgba(153,179,217,0.18) 0%, transparent 55%),
+    radial-gradient(1000px 700px at 85% 20%, rgba(153,179,217,0.14) 0%, transparent 60%),
+    linear-gradient(180deg, rgba(0,0,0,0.02), rgba(0,0,0,0.02));
 }
+.use-glass .glass,
+.use-glass .card,
+.use-glass .topbar,
+.use-glass .tab-inactive,
+.use-glass .tab-active,
+.use-glass .btn,
+.use-glass .input,
+.use-glass .textarea,
+.use-glass select.input {
+  background-color: rgba(255,255,255,0.55);
+  border: 1px solid rgba(255,255,255,0.35);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.3) inset, 0 8px 24px rgba(16,24,40,0.12);
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+}
+.dark.use-glass .glass,
+.dark.use-glass .card,
+.dark.use-glass .topbar,
+.dark.use-glass .tab-inactive,
+.dark.use-glass .tab-active,
+.dark.use-glass .btn,
+.dark.use-glass .input,
+.dark.use-glass .textarea,
+.dark.use-glass select.input {
+  background-color: rgba(17,17,17,0.55);
+  border-color: rgba(255,255,255,0.12);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, 0 10px 28px rgba(0,0,0,0.35);
+}
+.use-glass .tab-active { background-color: rgba(153,179,217,0.8); color:#0b0b0b; border-color:transparent; }
+.use-glass .btn:hover { background-color: rgba(255,255,255,0.7); }
+.dark.use-glass .btn:hover { background-color: rgba(25,25,25,0.7); }
+.use-glass .input:focus,
+.use-glass .textarea:focus,
+.use-glass select.input:focus {
+  outline:none;
+  box-shadow: 0 0 0 2px rgba(153,179,217,0.75), 0 1px 0 rgba(255,255,255,0.25) inset;
+  border-color: rgba(153,179,217,0.65);
+}
+.use-glass .card { border-radius:16px; }
+.use-glass .print-area { background: rgba(255,255,255,0.85); border-radius:16px; border:1px solid rgba(0,0,0,0.06); }
 
-.text-muted {
-  color: hsl(var(--text-muted));
+/* Accessibility */
+@media (prefers-reduced-transparency: reduce) {
+  .use-glass .glass,
+  .use-glass .card,
+  .use-glass .topbar,
+  .use-glass .tab-inactive,
+  .use-glass .tab-active,
+  .use-glass .btn,
+  .use-glass .input,
+  .use-glass .textarea,
+  .use-glass select.input {
+    background-color: var(--background);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
 }
-
-/* Debug indicator (optional) */
-/*
-body::after {
-  content: '🧩 Tailwind styles loaded';
-  position: fixed;
-  bottom: 4px;
-  right: 8px;
-  font-size: 10px;
-  opacity: 0.2;
-}
-*/
+/* Ensure images (logo) don’t overflow */
+img, svg, video { max-width:100%; height:auto; }
