@@ -64,9 +64,9 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
     const vat = subTotal * (num(invoice.taxRate)/100);
     const total = subTotal - num(invoice.discount) + vat + num(invoice.shipping);
 
-    const gray = "#d0d0d0";
-    const headerGray = "#d9d9d9";
-    const metaBlue = "#99b3d9";
+    const gridGray = "#d0d0d0";        // borders / lines
+    const headerGray = "#d9d9d9";      // header cells & meta labels (KEEPING GRAY)
+    const billToLabelHeight = 16;      // px height of the “Bill To” label above its box
 
     return (
       <div ref={ref} className="print-area">
@@ -82,23 +82,22 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
             </div>
             <div className="col-span-4 text-right">
               <div className="text-[14pt] font-extrabold tracking-wide">INVOICE</div>
-              {/* Bigger logo block */}
-              <div className="mt-3 inline-flex items-center justify-center w-[78mm] h-[18mm] border border-neutral-200 rounded">
+              {/* Bigger logo image, aligned with header block */}
+              <div className="mt-3 inline-flex items-center justify-center">
                 {invoice.logoUrl
-                  ? <img src={invoice.logoUrl} alt="Logo" className="h-[16mm] object-contain" />
-                  : <div className="text-[8pt] text-neutral-400">LOGO</div>
+                  ? <img src={invoice.logoUrl} alt="Logo" className="h-[22mm] max-w-[82mm] object-contain" />
+                  : <div className="text-[8pt] text-neutral-400 h-[22mm] w-[82mm] border border-neutral-200 rounded flex items-center justify-center">LOGO</div>
                 }
               </div>
             </div>
           </div>
 
-          {/* BILL TO + META (perfectly aligned, equal height) */}
+          {/* BILL TO + META (aligned: meta starts same top as Bill To box border) */}
           <div className="grid grid-cols-12 gap-4 mt-4 items-stretch">
             {/* Bill To */}
             <div className="col-span-6 h-full flex flex-col">
               <div className="uppercase text-[9pt] font-semibold text-neutral-600 mb-1">Bill To</div>
               <div className="rounded border border-neutral-400 flex-1" style={{ padding: "8px" }}>
-                {/* adaptively hide empty lines to avoid tall blanks */}
                 {(invoice.clientName || invoice.clientAddress || invoice.clientEmail || invoice.clientPhone) ? (
                   <>
                     {invoice.clientName && <div className="text-[9pt] font-semibold">{invoice.clientName}</div>}
@@ -112,8 +111,9 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
               </div>
             </div>
 
-            {/* Meta tiles */}
-            <div className="col-span-6 h-full">
+            {/* Meta tiles — add a top margin equal to the “Bill To” label height so
+                their first tile top border sits on the same line as the Bill To box top */}
+            <div className="col-span-6 h-full" style={{ marginTop: billToLabelHeight + 4 /* label + 4px gap */ }}>
               <div className="grid grid-rows-3 h-full">
                 {[
                   ["Invoice No", invoice.invoiceNo || "-"],
@@ -122,14 +122,14 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
                 ].map(([label, val], i) => (
                   <div key={i} className="grid grid-cols-12">
                     <div
-                      className="col-span-4 text-[9pt] font-semibold px-2 py-[6px] rounded-l self-stretch flex items-center"
-                      style={{ background: metaBlue, color: "#1a1a1a", border: `1px solid ${metaBlue}` }}
+                      className="col-span-4 text-[9pt] font-semibold px-2 py-[6px] self-stretch flex items-center"
+                      style={{ background: headerGray, color: "#1a1a1a", border: `1px solid ${gridGray}`, borderRightColor: gridGray, borderTopLeftRadius: i===0?4:0, borderBottomLeftRadius: i===2?4:0 }}
                     >
                       {label}
                     </div>
                     <div
-                      className="col-span-8 text-[9pt] px-2 py-[6px] rounded-r self-stretch flex items-center"
-                      style={{ border: `1px solid ${gray}`, borderLeftColor: metaBlue, background:"#fff" }}
+                      className="col-span-8 text-[9pt] px-2 py-[6px] self-stretch flex items-center"
+                      style={{ border: `1px solid ${gridGray}`, borderLeftColor: gridGray, background:"#fff", borderTopRightRadius: i===0?4:0, borderBottomRightRadius: i===2?4:0 }}
                     >
                       {val}
                     </div>
@@ -139,8 +139,8 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
             </div>
           </div>
 
-          {/* ITEMS TABLE (consistent color) */}
-          <div className="mt-4 rounded border" style={{ borderColor: gray }}>
+          {/* ITEMS TABLE (consistent gray) */}
+          <div className="mt-4 rounded border" style={{ borderColor: gridGray }}>
             <table className="w-full text-[9pt]" style={{ borderCollapse: "collapse" }}>
               <colgroup>
                 <col />
@@ -151,17 +151,17 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
               <thead>
                 <tr style={{ background: headerGray }}>
                   {["Description","Qty","Price","Total"].map((h, i)=>(
-                    <th key={i} className="text-left font-semibold" style={{ padding:"6px 6px", borderBottom:`1px solid ${gray}` }}>{h}</th>
+                    <th key={i} className="text-left font-semibold" style={{ padding:"6px 6px", borderBottom:`1px solid ${gridGray}` }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {invoice.items.map((it,i)=>(
                   <tr key={i}>
-                    <td style={{ padding:"6px", borderBottom:`1px dotted ${gray}` }}>{it.description}</td>
-                    <td style={{ padding:"6px", borderBottom:`1px dotted ${gray}`, textAlign:"right" }}>{num(it.qty)}</td>
-                    <td style={{ padding:"6px", borderBottom:`1px dotted ${gray}`, textAlign:"right" }}>{formatMoney(num(it.rate), invoice.currency)}</td>
-                    <td style={{ padding:"6px", borderBottom:`1px dotted ${gray}`, textAlign:"right" }}>
+                    <td style={{ padding:"6px", borderBottom:`1px dotted ${gridGray}` }}>{it.description}</td>
+                    <td style={{ padding:"6px", borderBottom:`1px dotted ${gridGray}`, textAlign:"right" }}>{num(it.qty)}</td>
+                    <td style={{ padding:"6px", borderBottom:`1px dotted ${gridGray}`, textAlign:"right" }}>{formatMoney(num(it.rate), invoice.currency)}</td>
+                    <td style={{ padding:"6px", borderBottom:`1px dotted ${gridGray}`, textAlign:"right" }}>
                       {formatMoney(num(it.qty)*num(it.rate), invoice.currency)}
                     </td>
                   </tr>
@@ -170,13 +170,12 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
             </table>
           </div>
 
-          {/* BANK + TOTALS ROW (adaptive: hide bank box if empty) */}
+          {/* BANK + TOTALS */}
           <div className="grid grid-cols-12 gap-4 mt-4">
-            {/* Bank Details left (optional) */}
             {invoice.bankDetails ? (
               <div className="col-span-7">
                 <div className="rounded border border-neutral-400 h-full flex flex-col">
-                  <div className="px-3 py-2 text-[9pt] font-semibold uppercase" style={{ borderBottom:`1px solid ${gray}` }}>
+                  <div className="px-3 py-2 text-[9pt] font-semibold uppercase" style={{ borderBottom:`1px solid ${gridGray}` }}>
                     Bank Details
                   </div>
                   <div className="px-3 py-3 text-[9pt] whitespace-pre-wrap flex-1">{invoice.bankDetails}</div>
@@ -184,14 +183,13 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
               </div>
             ) : null}
 
-            {/* Totals right; span wider if bank box is hidden */}
             <div className={invoice.bankDetails ? "col-span-5" : "col-span-12"}>
-              <div className="rounded border" style={{ borderColor: gray }}>
+              <div className="rounded border" style={{ borderColor: gridGray }}>
                 <table className="w-full text-[9pt]" style={{ borderCollapse:"collapse" }}>
                   <thead>
                     <tr style={{ background: headerGray }}>
-                      <th className="text-left font-semibold" style={{ padding:"6px 6px", borderBottom:`1px solid ${gray}` }}>Summary</th>
-                      <th className="text-right font-semibold" style={{ padding:"6px 6px", borderBottom:`1px solid ${gray}` }}>Amount</th>
+                      <th className="text-left font-semibold" style={{ padding:"6px 6px", borderBottom:`1px solid ${gridGray}` }}>Summary</th>
+                      <th className="text-right font-semibold" style={{ padding:"6px 6px", borderBottom:`1px solid ${gridGray}` }}>Amount</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -202,13 +200,13 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
                       ["Shipping", num(invoice.shipping)]
                     ].map(([label, val], i)=>(
                       <tr key={i}>
-                        <td style={{ padding:"6px", borderBottom:`1px solid ${gray}` }}>{label}</td>
-                        <td style={{ padding:"6px", borderBottom:`1px solid ${gray}`, textAlign:"right" }}>{formatMoney(num(val), invoice.currency)}</td>
+                        <td style={{ padding:"6px", borderBottom:`1px solid ${gridGray}` }}>{label}</td>
+                        <td style={{ padding:"6px", borderBottom:`1px solid ${gridGray}`, textAlign:"right" }}>{formatMoney(num(val), invoice.currency)}</td>
                       </tr>
                     ))}
                     <tr>
-                      <td className="font-bold" style={{ padding:"6px", borderTop:`2px solid ${gray}` }}>Total</td>
-                      <td className="font-bold" style={{ padding:"6px", borderTop:`2px solid ${gray}`, textAlign:"right" }}>
+                      <td className="font-bold" style={{ padding:"6px", borderTop:`2px solid ${gridGray}` }}>Total</td>
+                      <td className="font-bold" style={{ padding:"6px", borderTop:`2px solid ${gridGray}`, textAlign:"right" }}>
                         {formatMoney(total, invoice.currency)}
                       </td>
                     </tr>
@@ -220,7 +218,7 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
 
           {/* TERMS (center aligned) */}
           <div className="mt-4 rounded border border-neutral-400 text-center">
-            <div className="px-3 py-2 text-[9pt] font-semibold" style={{ borderBottom:`1px solid ${gray}` }}>
+            <div className="px-3 py-2 text-[9pt] font-semibold" style={{ borderBottom:`1px solid ${gridGray}` }}>
               Terms &amp; Conditions
             </div>
             <div className="px-3 py-3 text-[9pt] whitespace-pre-wrap">
@@ -239,7 +237,7 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
 );
 PrintInvoice.displayName = "PrintInvoice";
 
-/* =================== Main App (unchanged features) =================== */
+/* =================== Main App (unchanged from your last working version) =================== */
 export default function App() {
   const { dark, setDark } = useTheme();
 
@@ -383,7 +381,7 @@ export default function App() {
   const exportRowToPDF = (invoiceNo: string) => {
     const src = db.find(r => r.invoiceNo === invoiceNo); if (!src) return;
     setPrintInvoiceData({ ...src });
-    setTimeout(()=>{ if (isMobile) exportRowPDFMobile(); else handlePrintRow(); }, 30);
+    setTimeout(()=>{ const ua=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent); if(ua){ exportRowPDFMobile(); } else { handlePrintRow(); } }, 30);
   };
 
   return (
@@ -414,7 +412,12 @@ export default function App() {
           <>
             {/* Actions */}
             <div className="flex flex-wrap gap-2 mb-4">
-              <button className="btn btn-primary" onClick={exportPDF}><Printer className="h-4 w-4 mr-2" /> Export to PDF</button>
+              <button className="btn btn-primary" onClick={()=>{
+                const ua=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+                ua ? exportPDFMobile() : handlePrintDraft();
+              }}>
+                <Printer className="h-4 w-4 mr-2" /> Export to PDF
+              </button>
               <button className="btn" onClick={saveToDB}><Save className="h-4 w-4 mr-2" /> Save to DB</button>
               <button className="btn" onClick={()=>setInvoice(newInvoiceFromProfile(profile, invoice.currency))}><RefreshCcw className="h-4 w-4 mr-2" /> New from Profile</button>
               <label className="btn cursor-pointer"><Upload className="h-4 w-4 mr-2" /> Upload Logo<input type="file" accept="image/*" className="hidden" onChange={onLogoUpload} /></label>
@@ -601,7 +604,7 @@ export default function App() {
                           <td className="px-3 py-2 text-right">
                             <div className="flex justify-end gap-2">
                               <button className="btn-sm btn-ghost-strong" title="View/Edit" onClick={()=>viewToDraft(r.invoiceNo)}><Eye className="h-4 w-4" /></button>
-                              <button className="btn-sm btn-primary" title="Export PDF" onClick={()=>{ setPrintInvoiceData({...r}); setTimeout(()=>{ const ua=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent); if(ua){ /* handled in useEffect chain via exportRowToPDF below */ } }, 0); exportRowToPDF(r.invoiceNo); }}><Printer className="h-4 w-4" /></button>
+                              <button className="btn-sm btn-primary" title="Export PDF" onClick={()=>{ const ua=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent); setPrintInvoiceData({...r}); setTimeout(()=>{ ua ? exportRowPDFMobile() : handlePrintRow(); }, 30); }}><Printer className="h-4 w-4" /></button>
                               <button className="btn-sm btn-danger" title="Delete" onClick={()=>deleteFromDB(r.invoiceNo)}><Trash className="h-4 w-4" /></button>
                             </div>
                           </td>
