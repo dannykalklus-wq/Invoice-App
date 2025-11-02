@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic';
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { supabase } from "../lib/supabaseClient"; // harmless if not used
+import { supabase } from "../lib/supabaseClient";
 import {
   Plus, Trash2, Printer, Save, Upload, RefreshCcw,
   Sun, Moon, Eye, Trash, Search
@@ -57,7 +57,7 @@ const useTheme = () => {
   return { dark, setDark };
 };
 
-/* =================== PRINT / PDF (Excel-style) =================== */
+/* =================== PRINT / PDF (Excel-style, aligned & adaptive) =================== */
 const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
   ({ invoice }, ref) => {
     const subTotal = invoice.items.reduce((s, it) => s + num(it.qty)*num(it.rate), 0);
@@ -65,12 +65,13 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
     const total = subTotal - num(invoice.discount) + vat + num(invoice.shipping);
 
     const gray = "#d0d0d0";
+    const headerGray = "#d9d9d9";
     const metaBlue = "#99b3d9";
 
     return (
       <div ref={ref} className="print-area">
         <div className="print-inner py-4" style={{ width: "178mm" }}>
-          {/* HEADER ROW */}
+          {/* HEADER */}
           <div className="grid grid-cols-12 gap-4 items-start">
             <div className="col-span-8">
               <div className="font-extrabold text-[18pt] leading-tight">{invoice.companyName || "LEXVOR GROUP LTD"}</div>
@@ -81,54 +82,64 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
             </div>
             <div className="col-span-4 text-right">
               <div className="text-[14pt] font-extrabold tracking-wide">INVOICE</div>
-              <div className="mt-3 inline-flex items-center justify-center w-[60mm] h-[12mm] border border-neutral-200 rounded">
+              {/* Bigger logo block */}
+              <div className="mt-3 inline-flex items-center justify-center w-[78mm] h-[18mm] border border-neutral-200 rounded">
                 {invoice.logoUrl
-                  ? <img src={invoice.logoUrl} alt="Logo" className="h-[11mm] object-contain" />
+                  ? <img src={invoice.logoUrl} alt="Logo" className="h-[16mm] object-contain" />
                   : <div className="text-[8pt] text-neutral-400">LOGO</div>
                 }
               </div>
             </div>
           </div>
 
-          {/* BILL TO + META */}
-          <div className="grid grid-cols-12 gap-4 mt-4">
-            {/* Bill To box */}
-            <div className="col-span-6">
+          {/* BILL TO + META (perfectly aligned, equal height) */}
+          <div className="grid grid-cols-12 gap-4 mt-4 items-stretch">
+            {/* Bill To */}
+            <div className="col-span-6 h-full flex flex-col">
               <div className="uppercase text-[9pt] font-semibold text-neutral-600 mb-1">Bill To</div>
-              <div className="rounded border border-neutral-400" style={{ padding: "8px" }}>
-                <div className="text-[9pt] font-semibold">{invoice.clientName || "\u00A0"}</div>
-                <div className="text-[9pt] whitespace-pre-wrap">{invoice.clientAddress || "\u00A0"}</div>
-                {invoice.clientEmail && <div className="text-[9pt] underline">{invoice.clientEmail}</div>}
-                {invoice.clientPhone && <div className="text-[9pt]">{invoice.clientPhone}</div>}
+              <div className="rounded border border-neutral-400 flex-1" style={{ padding: "8px" }}>
+                {/* adaptively hide empty lines to avoid tall blanks */}
+                {(invoice.clientName || invoice.clientAddress || invoice.clientEmail || invoice.clientPhone) ? (
+                  <>
+                    {invoice.clientName && <div className="text-[9pt] font-semibold">{invoice.clientName}</div>}
+                    {invoice.clientAddress && <div className="text-[9pt] whitespace-pre-wrap mt-[1px]">{invoice.clientAddress}</div>}
+                    {invoice.clientEmail && <div className="text-[9pt] underline mt-[1px]">{invoice.clientEmail}</div>}
+                    {invoice.clientPhone && <div className="text-[9pt] mt-[1px]">{invoice.clientPhone}</div>}
+                  </>
+                ) : (
+                  <div className="text-[9pt] text-neutral-400">—</div>
+                )}
               </div>
             </div>
 
-            {/* Meta tiles (blue labels) */}
-            <div className="col-span-6">
-              {[
-                ["Invoice No", invoice.invoiceNo || "-"],
-                ["Invoice Date", invoice.invoiceDate || "-"],
-                ["Due Date", invoice.dueDate || "-"],
-              ].map(([label, val], i) => (
-                <div key={i} className="grid grid-cols-12" style={{ marginTop: i ? 4 : 0 }}>
-                  <div
-                    className="col-span-4 text-[9pt] font-semibold px-2 py-[6px] rounded-l"
-                    style={{ background: metaBlue, color: "#1a1a1a", border: `1px solid ${metaBlue}` }}
-                  >
-                    {label}
+            {/* Meta tiles */}
+            <div className="col-span-6 h-full">
+              <div className="grid grid-rows-3 h-full">
+                {[
+                  ["Invoice No", invoice.invoiceNo || "-"],
+                  ["Invoice Date", invoice.invoiceDate || "-"],
+                  ["Due Date", invoice.dueDate || "-"],
+                ].map(([label, val], i) => (
+                  <div key={i} className="grid grid-cols-12">
+                    <div
+                      className="col-span-4 text-[9pt] font-semibold px-2 py-[6px] rounded-l self-stretch flex items-center"
+                      style={{ background: metaBlue, color: "#1a1a1a", border: `1px solid ${metaBlue}` }}
+                    >
+                      {label}
+                    </div>
+                    <div
+                      className="col-span-8 text-[9pt] px-2 py-[6px] rounded-r self-stretch flex items-center"
+                      style={{ border: `1px solid ${gray}`, borderLeftColor: metaBlue, background:"#fff" }}
+                    >
+                      {val}
+                    </div>
                   </div>
-                  <div
-                    className="col-span-8 text-[9pt] px-2 py-[6px] rounded-r"
-                    style={{ border: `1px solid ${gray}`, borderLeftColor: metaBlue, background:"#fff" }}
-                  >
-                    {val}
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
 
-          {/* ITEMS TABLE */}
+          {/* ITEMS TABLE (consistent color) */}
           <div className="mt-4 rounded border" style={{ borderColor: gray }}>
             <table className="w-full text-[9pt]" style={{ borderCollapse: "collapse" }}>
               <colgroup>
@@ -138,19 +149,9 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
                 <col style={{ width:"40mm" }} />
               </colgroup>
               <thead>
-                <tr>
+                <tr style={{ background: headerGray }}>
                   {["Description","Qty","Price","Total"].map((h, i)=>(
-                    <th
-                      key={i}
-                      className="text-left font-semibold"
-                      style={{
-                        padding:"6px 6px",
-                        borderBottom:`1px solid ${gray}`,
-                        background:"#d9d9d9"
-                      }}
-                    >
-                      {h}
-                    </th>
+                    <th key={i} className="text-left font-semibold" style={{ padding:"6px 6px", borderBottom:`1px solid ${gray}` }}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -165,35 +166,34 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
                     </td>
                   </tr>
                 ))}
-                {/* filler rows for the “gridy” excel look */}
-                {Array.from({ length: Math.max(0, 10 - invoice.items.length) }).map((_,k)=>(
-                  <tr key={`f-${k}`}>
-                    <td style={{ padding:"12px 6px", borderBottom:`1px dotted ${gray}` }}>&nbsp;</td>
-                    <td style={{ padding:"12px 6px", borderBottom:`1px dotted ${gray}` }}>&nbsp;</td>
-                    <td style={{ padding:"12px 6px", borderBottom:`1px dotted ${gray}` }}>&nbsp;</td>
-                    <td style={{ padding:"12px 6px", borderBottom:`1px dotted ${gray}` }}>&nbsp;</td>
-                  </tr>
-                ))}
               </tbody>
             </table>
           </div>
 
-          {/* BANK + TOTALS ROW */}
+          {/* BANK + TOTALS ROW (adaptive: hide bank box if empty) */}
           <div className="grid grid-cols-12 gap-4 mt-4">
-            {/* BANK DETAILS (left) */}
-            <div className="col-span-7">
-              <div className="rounded border border-neutral-400">
-                <div className="px-3 py-2 text-[9pt] font-semibold uppercase" style={{ borderBottom:`1px solid ${gray}` }}>
-                  Bank Details
+            {/* Bank Details left (optional) */}
+            {invoice.bankDetails ? (
+              <div className="col-span-7">
+                <div className="rounded border border-neutral-400 h-full flex flex-col">
+                  <div className="px-3 py-2 text-[9pt] font-semibold uppercase" style={{ borderBottom:`1px solid ${gray}` }}>
+                    Bank Details
+                  </div>
+                  <div className="px-3 py-3 text-[9pt] whitespace-pre-wrap flex-1">{invoice.bankDetails}</div>
                 </div>
-                <div className="px-3 py-3 text-[9pt] whitespace-pre-wrap">{invoice.bankDetails || "—"}</div>
               </div>
-            </div>
+            ) : null}
 
-            {/* TOTALS (right) */}
-            <div className="col-span-5">
+            {/* Totals right; span wider if bank box is hidden */}
+            <div className={invoice.bankDetails ? "col-span-5" : "col-span-12"}>
               <div className="rounded border" style={{ borderColor: gray }}>
                 <table className="w-full text-[9pt]" style={{ borderCollapse:"collapse" }}>
+                  <thead>
+                    <tr style={{ background: headerGray }}>
+                      <th className="text-left font-semibold" style={{ padding:"6px 6px", borderBottom:`1px solid ${gray}` }}>Summary</th>
+                      <th className="text-right font-semibold" style={{ padding:"6px 6px", borderBottom:`1px solid ${gray}` }}>Amount</th>
+                    </tr>
+                  </thead>
                   <tbody>
                     {[
                       ["Subtotal", subTotal],
@@ -218,9 +218,11 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
             </div>
           </div>
 
-          {/* TERMS (full width) */}
-          <div className="mt-4 rounded border border-neutral-400">
-            <div className="px-3 py-2 text-[9pt] font-semibold" style={{ borderBottom:`1px solid ${gray}` }}>Terms &amp; Conditions</div>
+          {/* TERMS (center aligned) */}
+          <div className="mt-4 rounded border border-neutral-400 text-center">
+            <div className="px-3 py-2 text-[9pt] font-semibold" style={{ borderBottom:`1px solid ${gray}` }}>
+              Terms &amp; Conditions
+            </div>
             <div className="px-3 py-3 text-[9pt] whitespace-pre-wrap">
               {invoice.terms || "—"}
             </div>
@@ -237,7 +239,7 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
 );
 PrintInvoice.displayName = "PrintInvoice";
 
-/* =================== Main App (unchanged except calling Export on the visible preview) =================== */
+/* =================== Main App (unchanged features) =================== */
 export default function App() {
   const { dark, setDark } = useTheme();
 
@@ -266,7 +268,7 @@ export default function App() {
 
   const [tab, setTab] = useState<"create"|"invoices">("create");
 
-  // === Export: desktop (print) & mobile (capture)
+  // Exporters
   const visiblePreviewRef = useRef<HTMLDivElement>(null);
   const handlePrintDraft = useReactToPrint({
     contentRef: visiblePreviewRef,
@@ -277,9 +279,7 @@ export default function App() {
   const exportPDFMobile = async () => {
     try {
       const el = visiblePreviewRef.current; if (!el) return;
-      const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
-        import("html2canvas"), import("jspdf")
-      ]);
+      const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([ import("html2canvas"), import("jspdf") ]);
       const oldBG = (el as HTMLElement).style.backgroundColor;
       (el as HTMLElement).style.backgroundColor = "#ffffff";
       const canvas = await html2canvas(el, {
@@ -541,7 +541,7 @@ export default function App() {
               </div>
             </section>
 
-            {/* On-screen preview that the exporters read */}
+            {/* On-screen preview used for export */}
             <section className="card mt-6">
               <div className="card-h"><div className="card-t">Preview (A4, print-ready)</div></div>
               <div className="card-c">
@@ -601,7 +601,7 @@ export default function App() {
                           <td className="px-3 py-2 text-right">
                             <div className="flex justify-end gap-2">
                               <button className="btn-sm btn-ghost-strong" title="View/Edit" onClick={()=>viewToDraft(r.invoiceNo)}><Eye className="h-4 w-4" /></button>
-                              <button className="btn-sm btn-primary" title="Export PDF" onClick={()=>exportRowToPDF(r.invoiceNo)}><Printer className="h-4 w-4" /></button>
+                              <button className="btn-sm btn-primary" title="Export PDF" onClick={()=>{ setPrintInvoiceData({...r}); setTimeout(()=>{ const ua=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent); if(ua){ /* handled in useEffect chain via exportRowToPDF below */ } }, 0); exportRowToPDF(r.invoiceNo); }}><Printer className="h-4 w-4" /></button>
                               <button className="btn-sm btn-danger" title="Delete" onClick={()=>deleteFromDB(r.invoiceNo)}><Trash className="h-4 w-4" /></button>
                             </div>
                           </td>
