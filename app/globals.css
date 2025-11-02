@@ -1,103 +1,205 @@
+/* =============================
+   Tailwind Base
+============================= */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ---------- Premium base ---------- */
-html, body { @apply text-ink; }
-
-.input { @apply w-full rounded-lg border border-line bg-white px-3 py-2 outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/60 dark:bg-neutral-900 dark:border-neutral-800; }
-.textarea { @apply w-full rounded-lg border border-line bg-white px-3 py-2 outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/60 dark:bg-neutral-900 dark:border-neutral-800; }
-.btn { @apply inline-flex items-center rounded-lg border border-line bg-white px-3 py-2 hover:bg-neutral-50 active:bg-neutral-100 transition dark:bg-neutral-900 dark:hover:bg-neutral-800 dark:border-neutral-800; }
-.btn-primary { @apply inline-flex items-center rounded-lg bg-accent text-white px-3 py-2 hover:bg-sky-600 active:bg-sky-700 border border-transparent; }
-.btn-ghost-strong { @apply inline-flex items-center rounded-lg px-2 py-2 hover:bg-neutral-100 active:bg-neutral-200 dark:hover:bg-neutral-800; }
-.btn-danger { @apply inline-flex items-center rounded-lg px-2 py-2 text-red-600 hover:bg-red-50 active:bg-red-100 border border-red-200 dark:hover:bg-red-900/30 dark:border-red-900/40 dark:text-red-400; }
-.btn-sm { @apply px-2 py-1 rounded-md text-[13px]; }
-.card { @apply rounded-xl border border-line bg-white dark:bg-neutral-900 dark:border-neutral-800; }
-.card-h { @apply px-4 pt-4; }
-.card-c { @apply p-4; }
-.card-t { @apply text-[13px] uppercase tracking-wide text-muted font-semibold; }
-.label { @apply block text-[13px] text-muted mb-1; }
-
-.tab-btn { @apply px-4 py-2 text-sm font-medium bg-white hover:bg-neutral-50 dark:bg-neutral-900 dark:hover:bg-neutral-800; }
-.tab-btn-active { @apply bg-neutral-100 dark:bg-neutral-800; }
-
-:root{
-  --accent:#0ea5e9;
-  --ink:#111827;
-  --muted:#6b7280;
-  --line:#e5e7eb;
-  --excel-blue:#99b3d9;
+/* =============================
+   Theme Colors & Base Styling
+============================= */
+:root {
+  --background: 0 0% 100%;
+  --foreground: 240 10% 3.9%;
+  --line: 240 5% 90%;
+  --text-muted: 240 5% 46%;
 }
 
-@page { size: A4; margin: 16mm; }
-
-@media print{
-  html,body{ background:#fff!important; -webkit-print-color-adjust:exact; print-color-adjust:exact; color:var(--ink); }
-  .no-print{ display:none!important; }
-  .only-print{ display:block!important; }
+.dark {
+  --background: 240 10% 3.9%;
+  --foreground: 0 0% 98%;
+  --line: 240 3.7% 15.9%;
+  --text-muted: 240 5% 65%;
 }
 
-.print-area{ width:210mm; min-height:297mm; margin:0 auto; background:#fff; color:var(--ink); }
-.print-inner{ width:178mm; margin:0 auto; }
-
-.band{ border-left:6px solid var(--accent); padding-left:14px; }
-
-.print-h1{ font-size:28px; font-weight:800; letter-spacing:.2px; }
-.print-h2{ font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); }
-
-.print-line{ line-height:1.35; }
-
-.kv{ display:grid; grid-template-columns:1fr auto; align-items:baseline; gap:.75rem; }
-.num{ text-align:right; font-variant-numeric:tabular-nums; font-family:var(--font-mono),ui-monospace,SFMono-Regular,Menlo,monospace; }
-
-.table{ width:100%; border-collapse:collapse; table-layout:fixed; }
-.table th,.table td{ border-top:1px solid var(--line); padding:8px 10px; vertical-align:top; }
-.table thead th{ background:#f5f6f8; font-weight:600; }
-.table tbody tr:nth-child(even) td{ background:#fafafa; }
-.col-desc{ width:58%; } .col-qty{ width:10%; } .col-rate{ width:16%; } .col-amt{ width:16%; }
-
-.tile{ background:#fafafa; border:1px solid var(--line); border-radius:10px; padding:12px; }
-@media print{ .tile{ background:#fff; } }
-.totals{ width:66mm; border:1px solid var(--line); border-radius:12px; padding:12px; }
-.totals .total{ border-top:2px solid var(--line); margin-top:8px; padding-top:8px; font-weight:700; }
-
-.print-footer{ position:fixed; bottom:10mm; left:16mm; right:16mm; display:flex; justify-content:space-between; font-size:11px; color:var(--muted); }
-.print-footer .pageno::after{ content:"Page " counter(page) " of " counter(pages); }
-
-.watermark{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; font-size:80px; font-weight:800; letter-spacing:2px; color:rgba(17,24,39,0.06); transform:rotate(-25deg); pointer-events:none; }
-.show-watermark .watermark{ display:flex; }
-
-.avoid-break{ break-inside:avoid; page-break-inside:avoid; }
-.wrap{ word-break:break-word; overflow-wrap:anywhere; }
-.sep{ border-top:1px solid var(--line); }
-
-/* === Excel-like layout additions === */
-.meta {
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  overflow: hidden;
-  width: 72mm;
-  margin-left: auto;
+body {
+  @apply bg-[hsl(var(--background))] text-[hsl(var(--foreground))] antialiased;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
-.meta-row { display: grid; grid-template-columns: 1fr 1fr; }
-.meta-label {
-  background: var(--excel-blue);
-  font-weight: 700;
-  padding: 6px 10px;
-  border-right: 1px solid var(--line);
-  font-size: 12.5px;
-}
-.meta-val {
-  padding: 6px 10px;
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-  font-size: 12.5px;
-}
-.company-title { font-size: 30px; font-weight: 800; letter-spacing: .2px; }
-.soft-underline { border-bottom: 1px solid var(--line); }
 
-@media print{
-  .bg-neutral-50{ background:white!important; }
-  .border{ border-color:var(--line)!important; }
-  .p-3{ padding:10px!important; }
+/* =============================
+   Reusable UI Elements
+============================= */
+.input, .textarea, select {
+  @apply w-full rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-sm text-neutral-900 dark:text-neutral-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500;
 }
+
+.btn {
+  @apply inline-flex items-center justify-center rounded-md border border-neutral-300 dark:border-neutral-700 px-3 py-2 text-sm font-medium transition-all hover:bg-neutral-100 dark:hover:bg-neutral-800;
+}
+
+.btn-primary {
+  @apply bg-[#99b3d9] text-black hover:bg-[#89a5cc];
+}
+
+.btn-danger {
+  @apply bg-red-600 text-white hover:bg-red-500;
+}
+
+.btn-ghost-strong {
+  @apply bg-transparent hover:bg-neutral-200 dark:hover:bg-neutral-800;
+}
+
+.btn-sm {
+  @apply px-2 py-1 text-xs;
+}
+
+.label {
+  @apply text-sm font-semibold mb-1 text-neutral-700 dark:text-neutral-300;
+}
+
+.textarea {
+  resize: vertical;
+}
+
+/* =============================
+   Card Layouts
+============================= */
+.card {
+  @apply bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm mb-4;
+}
+.card-h {
+  @apply px-4 py-2 border-b border-neutral-200 dark:border-neutral-800;
+}
+.card-t {
+  @apply font-semibold text-neutral-800 dark:text-neutral-100;
+}
+.card-c {
+  @apply p-4;
+}
+
+/* =============================
+   Tabs
+============================= */
+.tab-btn {
+  @apply px-4 py-2 font-medium text-sm bg-white dark:bg-neutral-900 hover:bg-neutral-100 dark:hover:bg-neutral-800;
+}
+.tab-btn-active {
+  @apply bg-[#99b3d9] text-black;
+}
+
+/* =============================
+   Tables
+============================= */
+.table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+th, td {
+  padding: 8px 10px;
+  border-bottom: 1px solid hsl(var(--line));
+}
+th {
+  text-align: left;
+  font-weight: 600;
+  background: hsl(var(--line) / 0.2);
+}
+
+/* =============================
+   Invoice / Print Area
+============================= */
+.print-area {
+  background: #ffffff;
+  color: #000000;
+}
+.print-inner {
+  margin: 0 auto;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .print-area {
+    width: 100%;
+    max-width: 100%;
+    min-height: auto;
+    border-radius: 12px;
+    background: #fff;
+    color: #000;
+  }
+  .print-inner {
+    width: 100%;
+    max-width: 100%;
+    padding: 16px;
+  }
+
+  .print-h1 {
+    font-size: 20px;
+  }
+  .company-title {
+    font-size: 22px;
+  }
+  .table th,
+  .table td {
+    padding: 6px 8px;
+  }
+
+  .meta .meta-label {
+    font-size: 12px;
+  }
+  .meta .meta-val {
+    font-size: 12px;
+  }
+
+  .totals .kv {
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+}
+
+/* Print / PDF layout */
+@media print {
+  @page {
+    size: A4;
+    margin: 16mm;
+  }
+  html, body {
+    background: #fff !important;
+  }
+  .print-area {
+    width: 210mm !important;
+    min-height: 297mm !important;
+  }
+  .print-inner {
+    width: 178mm !important;
+    padding: 0 !important;
+  }
+}
+
+/* =============================
+   Misc
+============================= */
+img, svg, video {
+  max-width: 100%;
+  height: auto;
+}
+
+.text-muted {
+  color: hsl(var(--text-muted));
+}
+
+/* Debug indicator (optional) */
+/*
+body::after {
+  content: '🧩 Tailwind styles loaded';
+  position: fixed;
+  bottom: 4px;
+  right: 8px;
+  font-size: 10px;
+  opacity: 0.2;
+}
+*/
