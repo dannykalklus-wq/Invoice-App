@@ -2,65 +2,140 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Neutral gray/white theme */
-body {
-  @apply bg-neutral-50 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-50;
+/* ---------- Premium base ---------- */
+html, body {
+  @apply text-ink;
 }
 
-/* Buttons */
-.btn {
-  @apply inline-flex items-center justify-center rounded-lg border px-4 py-2 text-sm font-medium transition
-         border-neutral-300 bg-white text-neutral-900 hover:bg-neutral-100
-         dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:hover:bg-neutral-700;
-}
-.btn-primary {
-  @apply border-transparent bg-black text-white hover:opacity-90
-         dark:bg-white dark:text-black dark:hover:opacity-90;
-}
-.btn-danger {
-  @apply border-transparent bg-red-600 text-white hover:bg-red-700
-         dark:bg-red-500 dark:hover:bg-red-600;
-}
-/* High-contrast ghost button for dark mode */
-.btn-ghost-strong {
-  @apply border-transparent bg-transparent text-neutral-800 hover:bg-neutral-100
-         dark:text-neutral-100 dark:hover:bg-neutral-800 dark:border-neutral-700;
-}
-
-.btn-sm {
-  @apply inline-flex items-center justify-center rounded-lg border px-2 py-1 text-sm transition
-         border-neutral-300 bg-white text-neutral-900 hover:bg-neutral-100
-         dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:hover:bg-neutral-700;
-}
-
-/* Inputs */
+/* Simple UI atoms used by your page */
 .input {
-  @apply w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm
-         dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100;
+  @apply w-full rounded-lg border border-line bg-white px-3 py-2 outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/60 dark:bg-neutral-900 dark:border-neutral-800;
 }
 .textarea {
-  @apply w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm resize-y
-         dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100;
+  @apply w-full rounded-lg border border-line bg-white px-3 py-2 outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/60 dark:bg-neutral-900 dark:border-neutral-800;
 }
-.label {
-  @apply block text-sm font-medium mb-1 text-neutral-700 dark:text-neutral-200;
+.btn {
+  @apply inline-flex items-center rounded-lg border border-line bg-white px-3 py-2 hover:bg-neutral-50 active:bg-neutral-100 transition dark:bg-neutral-900 dark:hover:bg-neutral-800 dark:border-neutral-800;
 }
-
-/* Cards */
+.btn-primary {
+  @apply inline-flex items-center rounded-lg bg-accent text-white px-3 py-2 hover:bg-sky-600 active:bg-sky-700 border border-transparent;
+}
+.btn-ghost-strong {
+  @apply inline-flex items-center rounded-lg px-2 py-2 hover:bg-neutral-100 active:bg-neutral-200 dark:hover:bg-neutral-800;
+}
+.btn-danger {
+  @apply inline-flex items-center rounded-lg px-2 py-2 text-red-600 hover:bg-red-50 active:bg-red-100 border border-red-200 dark:hover:bg-red-900/30 dark:border-red-900/40 dark:text-red-400;
+}
+.btn-sm {
+  @apply px-2 py-1 rounded-md text-[13px];
+}
 .card {
-  @apply rounded-2xl border border-neutral-200 bg-white shadow-sm
-         dark:border-neutral-800 dark:bg-neutral-900;
+  @apply rounded-xl border border-line bg-white dark:bg-neutral-900 dark:border-neutral-800;
 }
-.card-h { @apply px-4 py-3 border-b border-neutral-200 dark:border-neutral-800; }
-.card-t { @apply text-lg font-semibold; }
+.card-h { @apply px-4 pt-4; }
 .card-c { @apply p-4; }
+.card-t { @apply text-[13px] uppercase tracking-wide text-muted font-semibold; }
+.label { @apply block text-[13px] text-muted mb-1; }
 
 /* Tabs */
 .tab-btn {
-  @apply px-4 py-2 bg-white text-neutral-900 hover:bg-neutral-100
-         dark:bg-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800;
+  @apply px-4 py-2 text-sm font-medium bg-white hover:bg-neutral-50 dark:bg-neutral-900 dark:hover:bg-neutral-800;
 }
 .tab-btn-active {
-  @apply bg-black text-white
-         dark:bg-white dark:text-black;
+  @apply bg-neutral-100 dark:bg-neutral-800;
+}
+
+/* ===== PDF / Print Pro Styles ===== */
+:root {
+  --accent: #0ea5e9; /* sky-500 */
+  --ink: #111827;    /* neutral-900 */
+  --muted: #6b7280;  /* neutral-500 */
+  --line: #e5e7eb;   /* neutral-200 */
+}
+
+@page { size: A4; margin: 16mm; }
+
+@media print {
+  html, body {
+    background: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    color: var(--ink);
+  }
+  .no-print { display: none !important; }
+  .only-print { display: block !important; }
+}
+
+/* Page canvas */
+.print-area { width: 210mm; min-height: 297mm; margin: 0 auto; background: #fff; color: var(--ink); }
+.print-inner { width: 178mm; margin: 0 auto; }
+
+/* Header band */
+.band {
+  border-left: 6px solid var(--accent);
+  padding-left: 14px;
+}
+
+/* Headings */
+.print-h1 { font-size: 28px; font-weight: 800; letter-spacing: .2px; }
+.print-h2 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); }
+
+/* Text rhythm */
+.print-line { line-height: 1.35; }
+
+/* Key–value rows */
+.kv { display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: .75rem; }
+.num { text-align: right; font-variant-numeric: tabular-nums; font-family: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+/* Table */
+.table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.table th, .table td { border-top: 1px solid var(--line); padding: 8px 10px; vertical-align: top; }
+.table thead th { background: #f5f6f8; font-weight: 600; }
+.table tbody tr:nth-child(even) td { background: #fafafa; } /* zebra */
+.col-desc { width: 58%; }
+.col-qty  { width: 10%; }
+.col-rate { width: 16%; }
+.col-amt  { width: 16%; }
+
+/* Tiles / cards (screen vs print) */
+.tile { background: #fafafa; border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
+@media print { .tile { background: #fff; } }
+
+/* Totals box */
+.totals { width: 66mm; border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+.totals .total { border-top: 2px solid var(--line); margin-top: 8px; padding-top: 8px; font-weight: 700; }
+
+/* Footer with page numbers */
+.print-footer {
+  position: fixed;
+  bottom: 10mm;
+  left: 16mm;
+  right: 16mm;
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--muted);
+}
+.print-footer .pageno::after { content: "Page " counter(page) " of " counter(pages); }
+
+/* Optional watermark (toggle by adding .show-watermark to .print-area) */
+.watermark {
+  position: fixed; inset: 0; display: none;
+  align-items: center; justify-content: center;
+  font-size: 80px; font-weight: 800; letter-spacing: 2px;
+  color: rgba(17,24,39,0.06); transform: rotate(-25deg);
+  pointer-events: none;
+}
+.show-watermark .watermark { display: flex; }
+
+/* Helpers */
+.avoid-break { break-inside: avoid; page-break-inside: avoid; }
+.wrap { word-break: break-word; overflow-wrap: anywhere; }
+.sep { border-top: 1px solid var(--line); }
+
+/* Print-time palette refinements */
+@media print {
+  .bg-neutral-50 { background: white !important; }
+  .border { border-color: var(--line) !important; }
+  .p-3 { padding: 10px !important; }
 }
