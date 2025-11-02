@@ -12,7 +12,7 @@ const config: Config = {
     extend: {
       fontFamily: {
         sans: ["var(--font-jakarta)", "system-ui", "Segoe UI", "Arial"],
-        mono: ["var(--font-mono)", "ui-monospace", "SFMono-Regular", "Menlo"],
+        mono: ["var(--font-mono)", "ui-monospace", "SFMono-Regular", "Menlo"]
       },
       colors: {
         line: "#e5e7eb",
