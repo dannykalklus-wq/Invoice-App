@@ -127,22 +127,24 @@ const useTheme = () => {
   return { dark, setDark };
 };
 
-/* =================== Print / PDF component (responsive + aligned) =================== */
+/* =================== Print / PDF component (exact A4 sizing) =================== */
 const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
   ({ invoice }, ref) => {
     const subTotal = invoice.items.reduce((s, it) => s + num(it.qty) * num(it.rate), 0);
     const vat = subTotal * (num(invoice.taxRate) / 100);
     const total = subTotal - num(invoice.discount) + vat + num(invoice.shipping);
 
+    // Unified colors/borders used by preview & print
     const gridGray = '#d0d0d0';
     const headerGray = '#d9d9d9';
     const borderThin = `0.6pt solid ${gridGray}`;
 
     return (
       <div ref={ref} className="print-area">
+        {/* NOTE: width of .print-inner is controlled globally to 186mm (A4 minus 12mm margins on each side) */}
         <div className="print-inner mx-auto py-4">
           {/* HEADER */}
-          <div className="grid md:grid-cols-12 grid-cols-12 gap-4 items-start">
+          <div className="grid md:grid-cols-12 grid-cols-12 gap-4 items-start avoid-break">
             <div className="md:col-span-8 col-span-12">
               <div className="font-extrabold md:text-[18pt] text-[16pt] leading-tight">
                 {invoice.companyName || 'LEXVOR GROUP LTD'}
@@ -175,7 +177,7 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
           </div>
 
           {/* BILL TO + META */}
-          <div className="grid md:grid-cols-12 grid-cols-12 gap-4 mt-4 items-start">
+          <div className="grid md:grid-cols-12 grid-cols-12 gap-4 mt-4 items-start avoid-break">
             {/* Bill To */}
             <div className="md:col-span-6 col-span-12 flex flex-col">
               <div className="uppercase text-[9pt] font-semibold text-neutral-600 mb-1">Bill To</div>
@@ -198,7 +200,7 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
               </div>
             </div>
 
-            {/* Meta tiles (auto height, aligned) */}
+            {/* Meta tiles */}
             <div className="md:col-span-6 col-span-12 md:self-start md:mt-[22px]">
               <div className="grid grid-rows-3 max-w-full">
                 {[
@@ -237,7 +239,7 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
           </div>
 
           {/* ITEMS TABLE */}
-          <div className="mt-4 rounded" style={{ border: borderThin }}>
+          <div className="mt-4 rounded avoid-break" style={{ border: borderThin }}>
             <table className="w-full text-[9pt]" style={{ borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ background: headerGray }}>
@@ -268,7 +270,7 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
           </div>
 
           {/* BANK + TOTAL */}
-          <div className="grid md:grid-cols-12 grid-cols-12 gap-4 mt-4">
+          <div className="grid md:grid-cols-12 grid-cols-12 gap-4 mt-4 avoid-break">
             {invoice.bankDetails && (
               <div className="md:col-span-7 col-span-12">
                 <div className="rounded h-full" style={{ border: borderThin }}>
@@ -318,34 +320,26 @@ const PrintInvoice = React.forwardRef<HTMLDivElement, { invoice: Invoice }>(
           </div>
 
           {/* TERMS */}
-          <div className="mt-4 rounded text-center" style={{ border: borderThin }}>
+          <div className="mt-4 rounded text-center avoid-break" style={{ border: borderThin }}>
             <div className="px-3 py-2 text-[9pt] font-semibold" style={{ borderBottom: borderThin }}>
               Terms &amp; Conditions
             </div>
-            <div className="px-3 py-3 text-[9pt] whitespace-pre-wrap">{invoice.terms || '—'}</div>
+            <div className="px-3 py-3 text-[9pt] whitespace-pre-wrap">
+              {invoice.terms || '—'}
+            </div>
           </div>
 
-          <div className="mt-6 text-center text-[10pt] font-bold">
+          <div className="mt-6 text-center text-[10pt] font-bold avoid-break">
             Thank you for doing business with Lexvor Group Limited.
           </div>
         </div>
-
-        {/* Screen & Print CSS */}
-        <style jsx global>{`
-          .print-inner { width: 178mm; }
-          @media (max-width: 768px) {
-            .print-inner { width: 100%; padding-left: 10px; padding-right: 10px; }
-          }
-          @page { size: A4; margin: 16mm; }
-          @media print { html, body { background: #fff !important; } .print-inner { width: auto; } }
-        `}</style>
       </div>
     );
   }
 );
 PrintInvoice.displayName = 'PrintInvoice';
 
-/* =================== Main App (FULL interface restored) =================== */
+/* =================== Main App (unchanged UI) =================== */
 export default function App() {
   const { dark, setDark } = useTheme();
 
@@ -401,6 +395,7 @@ export default function App() {
   const handlePrintDraft = useReactToPrint({
     contentRef: printRef,
     documentTitle: `Invoice_${invoice.invoiceNo}`,
+    removeAfterPrint: true
   });
 
   // Print: selected row (Invoices tab)
@@ -409,6 +404,7 @@ export default function App() {
   const handlePrintRow = useReactToPrint({
     contentRef: rowPrintRef,
     documentTitle: `Invoice_${printRow?.invoiceNo || 'Invoice'}`,
+    removeAfterPrint: true
   });
 
   // Totals
@@ -513,7 +509,7 @@ export default function App() {
           >
             Create Invoice
           </button>
-          <button
+        <button
             onClick={() => setTab('invoices')}
             className={`tab-btn border-l border-neutral-700 ${tab === 'invoices' ? 'tab-btn-active' : ''}`}
           >
@@ -734,12 +730,12 @@ export default function App() {
               <div ref={printRef}><PrintInvoice invoice={invoice} /></div>
             </div>
 
-            {/* On-screen PDF preview */}
+            {/* On-screen PDF preview — same inner width as print */}
             <section className="card mt-6">
               <div className="card-h"><div className="card-t">Preview (A4, print-ready)</div></div>
               <div className="card-c">
                 <div className="bg-white mx-auto shadow-sm" style={{ width: '210mm' }}>
-                  <div className="mx-auto" style={{ width: '190mm' }}>
+                  <div className="mx-auto" style={{ width: '186mm' }}>
                     <PrintInvoice invoice={invoice} />
                   </div>
                 </div>
@@ -831,7 +827,7 @@ export default function App() {
         )}
       </div>
 
-      {/* Utility styles for buttons/inputs/cards */}
+      {/* Utility styles for buttons/inputs/cards + PRINT FIXES */}
       <style jsx global>{`
         .btn { @apply inline-flex items-center gap-2 rounded-md bg-neutral-800 hover:bg-neutral-700 text-neutral-50 px-3 py-2; }
         .btn-primary { @apply bg-blue-600 hover:bg-blue-700 text-white; }
@@ -847,6 +843,45 @@ export default function App() {
         .card-t { @apply text-sm font-semibold text-neutral-200; }
         .tab-btn { @apply px-4 py-2 text-sm text-neutral-300 hover:bg-neutral-800; }
         .tab-btn-active { @apply bg-neutral-800 text-neutral-50; }
+
+        /* ---------- A4 sizing: EXACT MATCH preview & print ---------- */
+        :root {
+          --page-margin-mm: 12mm;
+          --content-width-mm: 186mm; /* 210 - 2*12 */
+        }
+
+        .print-inner { width: var(--content-width-mm); }
+
+        /* Avoid broken blocks across pages */
+        .avoid-break { break-inside: avoid; page-break-inside: avoid; }
+
+        /* Ensure images scale correctly in print */
+        .print-area img { max-width: 100%; height: auto; }
+
+        @page {
+          size: A4;
+          margin: var(--page-margin-mm);
+        }
+
+        @media print {
+          /* Force accurate colors and avoid unwanted scaling or filters */
+          html, body {
+            background: #fff !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          * {
+            box-shadow: none !important;
+            text-shadow: none !important;
+            filter: none !important;
+            backdrop-filter: none !important;
+            transform: none !important;
+          }
+          /* Limit output to the printable invoice content (not the UI) */
+          body > *:not(.print-area):not(.hidden) { display: none !important; }
+          .print-area { display: block !important; }
+          .print-inner { width: var(--content-width-mm) !important; }
+        }
       `}</style>
     </main>
   );
