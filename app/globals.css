@@ -1,156 +1,68 @@
-/* =============================
-   Tailwind Base
-============================= */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* =============================
-   Base Theme
-============================= */
+/* Basic resets + accessible defaults */
 :root {
-  --background: 0 0% 100%;
-  --foreground: 240 10% 3.9%;
-  --line: 240 5% 90%;
+  --bg: #f8fafc;
+  --muted: #6b7280;
+  --accent: #99b3d9; /* your requested color */
+  --card-bg: rgba(255,255,255,0.04);
 }
 
-.dark {
-  --background: 240 10% 3.9%;
-  --foreground: 0 0% 98%;
-  --line: 240 3.7% 15.9%;
+/* Ensure inputs do not trigger mobile zoom on iOS (use 16px base in inputs) */
+input, textarea, select, button {
+  font-size: 16px;
 }
 
-html, body {
-  @apply bg-[hsl(var(--background))] text-[hsl(var(--foreground))] antialiased;
-  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+/* Basic app body */
+html, body, #__next {
+  height: 100%;
+  background: linear-gradient(180deg, #111827, #0f172a);
+  color: #f8fafc;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* =============================
-   Controls
-============================= */
-.input, .textarea, select.input {
-  @apply w-full rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-sm text-neutral-900 dark:text-neutral-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500;
-}
-.textarea { resize: vertical; }
-
-.btn { @apply inline-flex items-center justify-center rounded-md border border-neutral-300 dark:border-neutral-700 px-3 py-2 text-sm font-medium transition-all hover:bg-neutral-100 dark:hover:bg-neutral-800; }
-.btn-primary { @apply bg-[#99b3d9] text-black hover:bg-[#89a5cc]; }
-.btn-danger { @apply bg-red-600 text-white hover:bg-red-500; }
-.btn-ghost-strong { @apply bg-transparent hover:bg-neutral-200 dark:hover:bg-neutral-800; }
-.btn-sm { @apply px-2 py-1 text-xs; }
-
-.label { @apply text-sm font-semibold mb-1 text-neutral-700 dark:text-neutral-300; }
-
-/* =============================
-   Cards
-============================= */
-.card { @apply bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm mb-4; }
-.card-h { @apply px-4 py-2 border-b border-neutral-200 dark:border-neutral-800; }
-.card-t { @apply font-semibold text-neutral-800 dark:text-neutral-100; }
-.card-c { @apply p-4; }
-
-/* =============================
-   Tabs (stable)
-============================= */
-.tab-inactive { background:#f6f6f6; color:#111; border:1px solid #e5e5e5; }
-.dark .tab-inactive { background:#111; color:#eaeaea; border-color:#2a2a2a; }
-.tab-active { background:#99b3d9; color:#0b0b0b; border:1px solid transparent; }
-
-/* =============================
-   Topbar
-============================= */
-.topbar .input, .topbar .btn, .topbar select.input { border-color:#dcdcdc; background:#fff; color:#111; }
-.dark .topbar .input, .dark .topbar .btn, .dark .topbar select.input { border-color:#2a2a2a !important; background:#111 !important; color:#eaeaea !important; }
-.dark .topbar-border { border-color:#2a2a2a !important; }
-
-/* =============================
-   Tables
-============================= */
-.table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
-table { width:100%; border-collapse:collapse; }
-th, td { padding:8px 10px; border-bottom:1px solid hsl(var(--line)); }
-th { text-align:left; font-weight:600; background:hsl(var(--line) / 0.2); }
-
-/* =============================
-   Print Area (for on-screen preview)
-============================= */
-.print-area { background:#ffffff; color:#000000; }
-.print-inner { margin:0 auto; }
-
-/* Mobile preview adjustments (web only) */
-@media (max-width: 768px) {
-  .print-area { width:100%; max-width:100%; border-radius:12px; }
-  .print-inner { width:100%; max-width:100%; padding:16px; }
-  .meta .meta-label, .meta .meta-val { font-size:12px; }
+/* Card & UI */
+.card {
+  border-radius: 14px;
+  background: var(--card-bg);
+  border: 1px solid rgba(255,255,255,0.04);
 }
 
-/* =============================
-   GLASS THEME (scoped to .use-glass)
-   — never applied in print
-============================= */
-.use-glass {
-  background:
-    radial-gradient(1200px 800px at 20% 0%, rgba(153,179,217,0.18) 0%, transparent 55%),
-    radial-gradient(1000px 700px at 85% 20%, rgba(153,179,217,0.14) 0%, transparent 60%),
-    linear-gradient(180deg, rgba(0,0,0,0.02), rgba(0,0,0,0.02));
-}
-.use-glass .glass,
-.use-glass .card,
-.use-glass .topbar,
-.use-glass .tab-inactive,
-.use-glass .tab-active,
-.use-glass .btn,
-.use-glass .input,
-.use-glass .textarea,
-.use-glass select.input {
-  background-color: rgba(255,255,255,0.55);
-  border: 1px solid rgba(255,255,255,0.35);
-  box-shadow: 0 1px 0 rgba(255,255,255,0.3) inset, 0 8px 24px rgba(16,24,40,0.12);
-  backdrop-filter: blur(12px) saturate(140%);
-  -webkit-backdrop-filter: blur(12px) saturate(140%);
-}
-.dark.use-glass .glass,
-.dark.use-glass .card,
-.dark.use-glass .topbar,
-.dark.use-glass .tab-inactive,
-.dark.use-glass .tab-active,
-.dark.use-glass .btn,
-.dark.use-glass .input,
-.dark.use-glass .textarea,
-.dark.use-glass select.input {
-  background-color: rgba(17,17,17,0.55);
-  border-color: rgba(255,255,255,0.12);
-  box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, 0 10px 28px rgba(0,0,0,0.35);
-}
-.use-glass .tab-active { background-color: rgba(153,179,217,0.8); color:#0b0b0b; border-color:transparent; }
+/* buttons */
+.btn { display:inline-flex; align-items:center; gap:.5rem; padding:.5rem .75rem; border-radius:.5rem; cursor:pointer; }
+.btn-primary { background:#1d4ed8; color:white; }
+.btn-ghost-strong { background: rgba(255,255,255,0.04); color: #e5e7eb; }
 
-/* =============================
-   HARD PRINT RESET — prevents “spoilt” PDFs
-   Kills blur, transparency, shadows, dark colors, forces A4 sizes.
-============================= */
+/* inputs */
+.input, .textarea {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+  color: #e5e7eb;
+  padding:.5rem .75rem;
+  border-radius:.5rem;
+}
+
+/* Print-specific: strict layout parity */
+.print-area { display:none; } /* hidden in app view; made visible in print or when used by print ref */
+.print-inner { width: 186mm; margin: 0 auto; }
+
+/* Print page sizing */
+@page { size: A4; margin: 12mm; }
 @media print {
-  @page { size: A4; margin: 16mm; }
-  html, body { background:#fff !important; color:#000 !important; }
-
-  /* kill all glass effects */
-  .use-glass, .use-glass * {
-    background: transparent !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    box-shadow: none !important;
-    filter: none !important;
-  }
-
-  /* printable sheet */
-  .print-area { width:210mm !important; min-height:297mm !important; background:#fff !important; border:none !important; }
-  .print-inner { width:178mm !important; padding:0 !important; }
-
-  /* default text color */
-  .print-area, .print-area * { color:#000 !important; }
-
-  /* tables & borders crisp */
-  table, th, td { border-color:#ddd !important; }
+  body { background: #fff !important; color: #000 !important; }
+  /* show only print-area when printing */
+  body > *:not(.print-area) { display:none !important; }
+  .print-area { display:block !important; }
+  .print-inner { width: 186mm !important; }
+  * { box-shadow:none !important; filter:none !important; transform:none !important; }
+  img { max-width: 100%; height: auto; }
+  .avoid-break { break-inside: avoid; page-break-inside: avoid; }
 }
 
-/* media safety */
-img, svg, video { max-width:100%; height:auto; }
+/* Small devices */
+@media (max-width: 640px) {
+  .print-inner { width: calc(100% - 20px); }
+}
