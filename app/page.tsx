@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Plus, Trash2, Printer, Save, Upload, RefreshCcw, Sun, Moon, Eye, Trash, Search } from "lucide-react";
 import { useReactToPrint } from "react-to-print";
+import { supabase } from '../lib/supabaseClient'; // if app/page.tsx is at /app/page.tsx and lib/ is at repo root
 
 /* =================== Types =================== */
 type Item = { description: string; qty: number; rate: number };
