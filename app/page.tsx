@@ -16,7 +16,7 @@ import {
   FileDown,
 } from 'lucide-react';
 import { useReactToPrint } from 'react-to-print';
-import { supabase } from '../lib/supabaseClient'; // ✅ Fixed import path
+import { supabase } from '../lib/supabaseClient'; // fixed relative import
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
@@ -93,34 +93,53 @@ export default function InvoiceApp() {
   const handleRemoveItem = (index: number) =>
     setItems(items.filter((_, i) => i !== index));
 
+  // === FIX: use contentRef (not content) to satisfy current react-to-print types ===
   const handlePrint = useReactToPrint({
-    content: () => componentRef.current,
+    contentRef: componentRef,
     documentTitle: `${companyProfile.companyName}_Invoice_${invoiceDetails.number}`,
   });
+  // ==============================================================================
 
   const handleExportPDF = async () => {
     const input = componentRef.current;
     if (!input) return;
 
-    const canvas = await html2canvas(input, { scale: 2 });
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    const imgData = canvas.toDataURL('image/png');
-    const imgProps = pdf.getImageProperties(imgData);
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+    try {
+      const canvas = await html2canvas(input, { scale: 2 });
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgData = canvas.toDataURL('image/png');
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
 
-    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-    pdf.save(`Invoice_${invoiceDetails.number || 'New'}.pdf`);
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`Invoice_${invoiceDetails.number || 'New'}.pdf`);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('PDF export failed', err);
+      alert('Export to PDF failed. Check console for details.');
+    }
   };
 
   useEffect(() => {
-    const savedProfile = localStorage.getItem('companyProfile');
-    if (savedProfile) setCompanyProfile(JSON.parse(savedProfile));
+    try {
+      const savedProfile = localStorage.getItem('companyProfile');
+      if (savedProfile) setCompanyProfile(JSON.parse(savedProfile));
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn('Failed to load company profile from localStorage', err);
+    }
   }, []);
 
   const handleProfileSave = () => {
-    localStorage.setItem('companyProfile', JSON.stringify(companyProfile));
-    alert('Company profile saved locally!');
+    try {
+      localStorage.setItem('companyProfile', JSON.stringify(companyProfile));
+      alert('Company profile saved locally!');
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to save profile', err);
+      alert('Failed to save company profile.');
+    }
   };
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -150,6 +169,13 @@ export default function InvoiceApp() {
               className="flex items-center px-3 py-2 bg-green-600 hover:bg-green-700 rounded-md text-sm font-medium text-white"
             >
               <Save size={16} className="mr-2" /> Save Profile
+            </button>
+            <button
+              onClick={handlePrint}
+              className="flex items-center px-3 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-md text-sm font-medium text-white"
+              title="Print / Export (browser print)"
+            >
+              <Printer size={16} className="mr-2" /> Print
             </button>
           </div>
 
