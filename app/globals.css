@@ -1,68 +1,219 @@
+/* app/globals.css - full file */
+
+/* Tailwind base — keep these if you use Tailwind */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Basic resets + accessible defaults */
+/* Root colors */
 :root {
-  --bg: #f8fafc;
-  --muted: #6b7280;
-  --accent: #99b3d9; /* your requested color */
-  --card-bg: rgba(255,255,255,0.04);
+  --bg: #0b0b0b;
+  --card: rgba(255,255,255,0.03);
+  --muted: #9aa0a6;
+  --accent: #99b3d9; /* your requested accent */
 }
 
-/* Ensure inputs do not trigger mobile zoom on iOS (use 16px base in inputs) */
-input, textarea, select, button {
-  font-size: 16px;
-}
-
-/* Basic app body */
-html, body, #__next {
+/* Global body */
+html, body {
   height: 100%;
-  background: linear-gradient(180deg, #111827, #0f172a);
-  color: #f8fafc;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+}
+body {
+  @apply bg-neutral-900 text-neutral-100 antialiased;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  line-height: 1.4;
+  padding: 0;
+  margin: 0;
 }
 
-/* Card & UI */
+/* App container */
+main {
+  min-height: 100vh;
+}
+
+/* Buttons / inputs (basic styling compatible with the UI you had) */
+.btn {
+  @apply inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm border;
+}
+.btn-primary {
+  background-color: var(--accent);
+  color: #0b0b0b;
+  border-color: rgba(0,0,0,0.16);
+}
+.btn-ghost {
+  @apply bg-transparent border-neutral-700 text-neutral-100;
+}
+
+/* Cards */
 .card {
-  border-radius: 14px;
-  background: var(--card-bg);
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border-radius: 10px;
   border: 1px solid rgba(255,255,255,0.04);
+  padding: 16px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.6);
 }
 
-/* buttons */
-.btn { display:inline-flex; align-items:center; gap:.5rem; padding:.5rem .75rem; border-radius:.5rem; cursor:pointer; }
-.btn-primary { background:#1d4ed8; color:white; }
-.btn-ghost-strong { background: rgba(255,255,255,0.04); color: #e5e7eb; }
-
-/* inputs */
+/* Input & textarea */
 .input, .textarea {
-  background: rgba(255,255,255,0.02);
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
   border: 1px solid rgba(255,255,255,0.06);
-  color: #e5e7eb;
-  padding:.5rem .75rem;
-  border-radius:.5rem;
+  background: rgba(255,255,255,0.02);
+  color: inherit;
+  font-size: 14px;
+}
+.textarea { min-height: 88px; resize: vertical; }
+
+/* Tab buttons */
+.tab-btn {
+  padding: 8px 16px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: transparent;
+  color: inherit;
+}
+.tab-btn-active {
+  background: rgba(255,255,255,0.04);
 }
 
-/* Print-specific: strict layout parity */
-.print-area { display:none; } /* hidden in app view; made visible in print or when used by print ref */
-.print-inner { width: 186mm; margin: 0 auto; }
+/* Invoice print area wrapper */
+.invoice-print-wrapper {
+  width: 210mm;
+  background: white;
+  color: #111;
+  margin: 0 auto;
+  padding: 16mm;
+  font-size: 12pt;
+  box-sizing: border-box;
+}
 
-/* Print page sizing */
-@page { size: A4; margin: 12mm; }
+/* PDF heading styles */
+.invoice-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.invoice-company {
+  max-width: 55%;
+}
+.invoice-title {
+  text-align: right;
+  font-weight: 700;
+  font-size: 28px;
+}
+.invoice-logo {
+  width: 160px;
+  height: auto;
+  object-fit: contain;
+}
+
+/* Bill + meta layout */
+.invoice-meta-row {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 18px;
+  margin-top: 18px;
+}
+.bill-box, .meta-box {
+  border: 1px solid #ccc;
+  padding: 12px;
+  border-radius: 4px;
+  min-height: 110px;
+  box-sizing: border-box;
+  background: #fff;
+}
+.meta-tile {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+}
+.meta-tile .label {
+  background: #99b3d9;
+  color: #fff;
+  padding: 8px 10px;
+  font-weight: 600;
+  border-right: 1px solid #cddae9;
+}
+.meta-tile .value {
+  padding: 8px 10px;
+  border: 1px solid #e6eef8;
+}
+
+/* Items table */
+.items-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 18px;
+  table-layout: fixed;
+}
+.items-table thead th {
+  background: #99b3d9;
+  color: #fff;
+  padding: 8px 12px;
+  text-align: left;
+  font-weight: 700;
+}
+.items-table tbody td {
+  padding: 10px 12px;
+  border-bottom: 1px dotted #888;
+  vertical-align: middle;
+}
+.items-table .amount, .items-table .rate {
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Bank details + summary */
+.bottom-row {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 20px;
+  margin-top: 18px;
+}
+.bank-box, .summary-box {
+  border: 1px solid #ddd;
+  padding: 12px;
+  border-radius: 6px;
+  background: #fff;
+}
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 8px;
+}
+.summary-row.total {
+  font-weight: 700;
+  border-top: 1px solid #ddd;
+  margin-top: 6px;
+}
+
+/* Terms & Thanks */
+.terms-box {
+  margin-top: 20px;
+  border: 1px dashed #ddd;
+  padding: 12px;
+  border-radius: 6px;
+  text-align: center;
+  background: #fff;
+}
+.thanks {
+  margin-top: 18px;
+  text-align: center;
+  font-weight: 800;
+  font-size: 14pt;
+}
+
+/* Print rules (A4) */
+@page { size: A4; margin: 0; }
 @media print {
-  body { background: #fff !important; color: #000 !important; }
-  /* show only print-area when printing */
-  body > *:not(.print-area) { display:none !important; }
-  .print-area { display:block !important; }
-  .print-inner { width: 186mm !important; }
-  * { box-shadow:none !important; filter:none !important; transform:none !important; }
-  img { max-width: 100%; height: auto; }
-  .avoid-break { break-inside: avoid; page-break-inside: avoid; }
+  body * { visibility: hidden; }
+  .invoice-print-wrapper, .invoice-print-wrapper * { visibility: visible; }
+  .invoice-print-wrapper { position: absolute; left: 0; top: 0; width: 100%; }
 }
 
-/* Small devices */
-@media (max-width: 640px) {
-  .print-inner { width: calc(100% - 20px); }
+/* Responsive adjustments for web preview + mobile */
+@media (max-width: 900px) {
+  .invoice-meta-row { grid-template-columns: 1fr; }
+  .invoice-print-wrapper { padding: 12mm; font-size: 11pt; }
+  .invoice-logo { width: 120px; }
 }
