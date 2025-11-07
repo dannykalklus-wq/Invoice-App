@@ -2,6 +2,7 @@
   "name": "invoice-app",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "engines": {
     "node": "20.x"
   },
@@ -12,23 +13,18 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.44.1",
-    "html2canvas": "^1.4.1",
-    "jspdf": "^2.5.1",
-    "lucide-react": "^0.390.0",
     "next": "14.2.33",
     "react": "18.2.0",
     "react-dom": "18.2.0",
-    "react-to-print": "^3.1.1",
-    "tailwindcss": "^3.4.3"
+    "@supabase/supabase-js": "^2.44.1"
   },
   "devDependencies": {
+    "tailwindcss": "^3.4.1",
+    "postcss": "^8.4.35",
+    "autoprefixer": "^10.4.18",
+    "@tailwindcss/forms": "^0.5.7",
+    "@types/node": "^20.8.1",
     "@types/react": "^18.2.21",
-    "@types/react-dom": "^18.2.7",
-    "autoprefixer": "^10.4.17",
-    "postcss": "^8.4.31",
-    "typescript": "^5.3.3",
-    "eslint": "^8.56.0",
-    "eslint-config-next": "14.2.33"
+    "typescript": "^5.4.2"
   }
 }
